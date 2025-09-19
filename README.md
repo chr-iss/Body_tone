@@ -23,18 +23,7 @@ The system uses **QR codes** to check members in and track their payments, helpi
 - **Offline Mode**  
   Check-ins are stored locally if internet is down and sync automatically once it’s restored.
 
----
 
-## ❌ Out of Scope (MVP)
-
-This MVP will **not** include:
-
-- Advanced financial reports
-- Public member mobile app
-- Automated online payments (e.g., Stripe)
-- Class booking or scheduling features
-
----
 
 ## 🛠️ Tech & Tools
 
@@ -43,7 +32,7 @@ This MVP will **not** include:
 - Simple database for members & payments
 - Free/open-source software stack (to keep costs down)
 
----
+
 
 ## 🎯 Goal
 
@@ -59,6 +48,6 @@ To provide a **core, low-cost system** that:
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/bodytone-gym-mvp.git
+   git clone https://github.com/AyandaLuthuli/bodytone-gym-mvp.git
    cd bodytone-gym-mvp
    ```
