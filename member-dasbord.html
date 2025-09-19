@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Body Tone Gym - Member Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+    --primary: #2c3e50;
+    --secondary: #3498db;
+    --accent: #e74c3c;
+    --light: #ecf0f1;
+    --dark: #2c3e50;
+    --success: #2ecc71;
+    --warning: #f39c12;
+    --error: #e74c3c;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+.header {
+    background: var(--primary);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.header h1 { font-size: 20px; }
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+@media (max-width: 900px) {
+    .container { grid-template-columns: 1fr; }
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.card-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--dark);
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee;
+}
+
+.profile-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.profile-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--secondary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: bold;
+    margin-right: 20px;
+}
+
+.profile-info h2 { margin-bottom: 5px; color: var(--dark); }
+.profile-info p { color: #666; }
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+.detail-item:last-child { border-bottom: none; margin-bottom:0; padding-bottom:0; }
+
+.detail-label { font-weight: 600; color: #666; }
+
+.qr-container { text-align: center; margin: 20px 0; }
+#qrcode { display: inline-block; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+
+.payment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+.payment-table th, .payment-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+.payment-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: var(--dark);
+}
+.payment-table tr:hover { background: #f8f9fa; }
+
+.no-payments, .loading {
+    text-align: center;
+    padding: 30px;
+    color: #999;
+    font-style: italic;
+}
+
+.placeholder {
+    background: #f0f0f0;
+    border-radius: 4px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+    <h1>Body Tone Gym - Member Dashboard</h1>
+</div>
+
+<div class="container">
+    <div class="card">
+        <h2 class="card-title">Member Profile</h2>
+        <div class="profile-section">
+            <div class="profile-img" id="profileImg"></div>
+            <div class="profile-info">
+                <h2 id="memberName"></h2>
+                <p id="memberEmail"></p>
+            </div>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Member ID:</span>
+            <span id="memberId"></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Username:</span>
+            <span id="memberUsername"></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Gender:</span>
+            <span id="memberGender"></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Join Date:</span>
+            <span id="memberJoinDate"></span>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2 class="card-title">Membership & QR Code</h2>
+        <div class="detail-item">
+            <span class="detail-label">Membership Type:</span>
+            <span id="membershipType"></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Status:</span>
+            <span id="membershipStatus"></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">Start Date:</span>
+            <span id="membershipStart"></span>
+        </div>
+        <div class="detail-item">
+            <span class="detail-label">End Date:</span>
+            <span id="membershipEnd"></span>
+        </div>
+        <div class="qr-container">
+            <div id="qrcode" style="width:180px;height:180px;"></div>
+        </div>
+    </div>
+
+    <div class="card" style="grid-column:1/-1;">
+        <h2 class="card-title">Payment History</h2>
+        <div id="paymentsLoading">Loading payments...</div>
+        <div id="paymentsContainer" style="display:none;">
+            <table class="payment-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="paymentsTableBody"></tbody>
+            </table>
+            <div id="noPayments" class="no-payments" style="display:none;">No payments found.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            
+                
+               
+const memberid = JSON.parse(localStorage.getItem("member"));
+                console.log("Retrieved member data from localStorage:",memberid);
+                
+
+
+
+if (!memberid) {
+    alert("No member ID provided. Redirecting to login.");
+    window.location.href = "login.html";
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadMemberDetails(memberid);
+    await loadMembershipDetails(memberid);
+    await loadPaymentHistory(memberid);
+});
+
+async function loadMemberDetails(memberId) {
+    try {
+        const { data: member, error } = await supabase.from("member").select("*").eq("memberid", memberId).single();
+        if (error || !member) throw error || new Error("Member not found");
+
+        document.getElementById("memberName").textContent = `${member.FName} ${member.LName}`;
+        document.getElementById("memberEmail").textContent = member.Email;
+        document.getElementById("memberId").textContent = member.memberid;
+        document.getElementById("memberUsername").textContent = member.UName;
+        document.getElementById("memberGender").textContent = member.Gender || "Not specified";
+        document.getElementById("memberJoinDate").textContent = new Date(member.JoinDate).toLocaleDateString();
+
+        const profileImg = document.getElementById("profileImg");
+        profileImg.textContent = `${member.FName.charAt(0)}${member.LName.charAt(0)}`.toUpperCase();
+
+        generateQRCode(`MEMBER_${member.memberid}_${member.UName.toUpperCase()}`);
+    } catch (err) {
+        console.error(err);
+        alert("Failed to load member details.");
+    }
+}
+
+async function loadMembershipDetails(memberId) {
+    try {
+        const { data: memberships, error } = await supabase.from("membership").select("*").eq("memberid", memberId).order("startdate", { ascending: false }).limit(1);
+        if (error) throw error;
+
+        if (memberships && memberships.length > 0) {
+            const m = memberships[0];
+            document.getElementById("membershipType").textContent = m.Type;
+            document.getElementById("membershipStatus").textContent = m.Status;
+            document.getElementById("membershipStart").textContent = new Date(m.StartDate).toLocaleDateString();
+            document.getElementById("membershipEnd").textContent = new Date(m.EndDate).toLocaleDateString();
+        } else {
+            document.getElementById("membershipType").textContent = "No membership";
+            document.getElementById("membershipStatus").textContent = "Inactive";
+            document.getElementById("membershipStart").textContent = "N/A";
+            document.getElementById("membershipEnd").textContent = "N/A";
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function loadPaymentHistory(memberId) {
+    try {
+        const { data: payments, error } = await supabase.from("payment").select("*").eq("memberid", memberId).order("paymentdate", { ascending: false });
+        if (error) throw error;
+
+        document.getElementById("paymentsLoading").style.display = "none";
+        document.getElementById("paymentsContainer").style.display = "block";
+
+        if (payments && payments.length > 0) {
+            const tbody = document.getElementById("paymentsTableBody");
+            payments.forEach(p => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${new Date(p.PaymentDate).toLocaleDateString()}</td>
+                    <td>Membership Payment</td>
+                    <td>R${p.Amount.toFixed(2)}</td>
+                    <td>${p.Method || "N/A"}</td>
+                    <td>${p.Status}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        } else {
+            document.getElementById("noPayments").style.display = "block";
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function generateQRCode(data) {
+    const qrContainer = document.getElementById("qrcode");
+    qrContainer.innerHTML = "";
+    QRCode.toCanvas(qrContainer, data, { width: 180, margin: 1 }, function(err) {
+        if (err) console.error(err);
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Body Tone Gym - Staff Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --primary: #2c3e50;
+        --secondary: #3498db;
+        --accent: #e74c3c;
+        --light: #ecf0f1;
+        --dark: #2c3e50;
+        --success: #2ecc71;
+        --warning: #f39c12;
+        --error: #e74c3c;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+          url("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z3ltJTIwYmFja2dyb3VuZHxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80");
+        background-size: cover;
+        background-position: center;
+        color: #333;
+        line-height: 1.6;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 1200px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .login-card {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 450px;
+        overflow: hidden;
+      }
+
+      .login-header {
+        background: var(--primary);
+        color: white;
+        padding: 25px;
+        text-align: center;
+        position: relative;
+      }
+
+      .login-header h1 {
+        font-size: 24px;
+        margin-bottom: 5px;
+      }
+
+      .login-header p {
+        opacity: 0.8;
+        font-size: 14px;
+      }
+
+      .staff-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: var(--accent);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .login-body {
+        padding: 25px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--dark);
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      .form-control:focus {
+        border-color: var(--secondary);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+      }
+
+      .btn {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: var(--secondary);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .btn:hover {
+        background: #2980b9;
+      }
+
+      .alert {
+        padding: 12px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .alert-error {
+        background: #ffecec;
+        color: var(--error);
+        border: 1px solid #f5c6cb;
+      }
+
+      .alert-success {
+        background: #e6fffa;
+        color: var(--success);
+        border: 1px solid #c3e6cb;
+      }
+
+      .login-footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #777;
+      }
+
+      .login-footer a {
+        color: var(--secondary);
+        text-decoration: none;
+      }
+
+      .powered-by {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 12px;
+        color: #999;
+      }
+
+      .system-features {
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+      }
+
+      .system-features h3 {
+        text-align: center;
+        margin-bottom: 15px;
+        color: var(--dark);
+      }
+
+      .feature-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .feature {
+        background: #f8f9fa;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+      }
+
+      .feature i {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--secondary);
+        font-size: 16px;
+      }
+
+      @media (max-width: 768px) {
+        .feature-list {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="login-card">
+        <div class="login-header">
+          <div class="staff-badge">STAFF</div>
+          <h1>Body Tone Gym</h1>
+          <p>Staff Management System</p>
+        </div>
+
+        <div class="login-body">
+          <div id="errorAlert" class="alert alert-error">
+            Invalid email or password. Please try again.
+          </div>
+
+          <div id="successAlert" class="alert alert-success">
+            Login successful! Redirecting...
+          </div>
+
+          <form id="loginForm">
+            <div class="form-group">
+              <label for="email">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                class="form-control"
+                placeholder="Enter your staff email"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                class="form-control"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
+            <button type="submit" class="btn">Staff Login</button>
+          </form>
+
+          <div class="system-features">
+            <h3>Management System Features</h3>
+            <div class="feature-list">
+              <div class="feature">
+                <i class="fas fa-qrcode"></i>
+                <div>QR Code Check-in</div>
+              </div>
+              <div class="feature">
+                <i class="fas fa-user-plus"></i>
+                <div>Member Registration</div>
+              </div>
+              <div class="feature">
+                <i class="fas fa-money-bill-wave"></i>
+                <div>Payment Tracking</div>
+              </div>
+              <div class="feature">
+                <i class="fas fa-wifi"></i>
+                <div>Offline Functionality</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="login-footer">
+            <p>Not a Staff Member? <a href="member-login.html">click here</a></p>
+          </div>
+        </div>
+
+        
+    <script>
+      // Initialize Supabase
+      const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+
+      const supabase = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+      // Form submission handler
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+
+          // Hide previous alerts
+          document.getElementById("errorAlert").style.display = "none";
+          document.getElementById("successAlert").style.display = "none";
+
+          try {
+            // Try to authenticate as staff
+            const { data: staffData, error: staffError } = await supabase
+              .from("staff")
+              .select("staffid, email, plainpassword, role")
+              .eq("email", email)
+              .eq("plainpassword", password)
+              .single();
+            console.log(staffData, staffError);
+            if (!staffError && staffData) {
+              // Successful staff login
+              showSuccess("Staff login successful!");
+              // Store user data in localStorage
+              localStorage.setItem(
+                "user",
+                JSON.stringify({
+                  id: staffData.staffid,
+                  email: staffData.email,
+                  role: staffData.role.toLowerCase(),
+                  status: "active",
+                })
+              );
+
+              // Redirect to appropriate dashboard based on role
+              setTimeout(() => {
+                if (staffData.role.toLowerCase() === "admin") {
+                  window.location.href = "admin-dashboard.html";
+                } else {
+                  window.location.href = "staff-dashboard.html";
+                }
+              }, 1500);
+              return;
+            }
+
+            // If we get here, authentication failed
+            showError("Invalid email or password. Please try again.");
+          } catch (error) {
+            console.error("Login error:", error);
+            showError("An error occurred during login. Please try again.");
+          }
+        });
+
+      // Helper functions to show alerts
+      function showError(message) {
+        const errorAlert = document.getElementById("errorAlert");
+        errorAlert.textContent = message;
+        errorAlert.style.display = "block";
+      }
+
+      function showSuccess(message) {
+        const successAlert = document.getElementById("successAlert");
+        successAlert.textContent = message;
+        successAlert.style.display = "block";
+      }
+
+      // Check if user is already logged in
+      window.addEventListener("DOMContentLoaded", () => {
+        const user = localStorage.getItem("user");
+        if (user) {
+          const userData = JSON.parse(user);
+          if (userData.role === "admin") {
+            window.location.href = "admin-dashboard.html";
+          } else if (
+            userData.role === "staff" ||
+            userData.role === "trainer" ||
+            userData.role === "cashier"
+          ) {
+            window.location.href = "staff-dashboard.html";
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

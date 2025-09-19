@@ -1,391 +1,743 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Body Tone Gym - Staff Login</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Body Tone Gym - Services</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-      :root {
-        --primary: #2c3e50;
-        --secondary: #3498db;
-        --accent: #e74c3c;
-        --light: #ecf0f1;
-        --dark: #2c3e50;
-        --success: #2ecc71;
-        --warning: #f39c12;
-        --error: #e74c3c;
-      }
-
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      }
-
-      body {
-        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-          url("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z3ltJTIwYmFja2dyb3VuZHxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80");
-        background-size: cover;
-        background-position: center;
-        color: #333;
-        line-height: 1.6;
-        min-height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-      }
-
-      .container {
-        width: 100%;
-        max-width: 1200px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-
-      .login-card {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-        width: 100%;
-        max-width: 450px;
-        overflow: hidden;
-      }
-
-      .login-header {
-        background: var(--primary);
-        color: white;
-        padding: 25px;
-        text-align: center;
-        position: relative;
-      }
-
-      .login-header h1 {
-        font-size: 24px;
-        margin-bottom: 5px;
-      }
-
-      .login-header p {
-        opacity: 0.8;
-        font-size: 14px;
-      }
-
-      .staff-badge {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: var(--accent);
-        color: white;
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-      }
-
-      .login-body {
-        padding: 25px;
-      }
-
-      .form-group {
-        margin-bottom: 20px;
-      }
-
-      .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: 600;
-        color: var(--dark);
-      }
-
-      .form-control {
-        width: 100%;
-        padding: 12px 15px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        font-size: 16px;
-        transition: border-color 0.3s;
-      }
-
-      .form-control:focus {
-        border-color: var(--secondary);
-        outline: none;
-        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
-      }
-
-      .btn {
-        display: block;
-        width: 100%;
-        padding: 12px;
-        background: var(--secondary);
-        color: white;
-        border: none;
-        border-radius: 5px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background 0.3s;
-      }
-
-      .btn:hover {
-        background: #2980b9;
-      }
-
-      .alert {
-        padding: 12px;
-        border-radius: 5px;
-        margin-bottom: 20px;
-        display: none;
-      }
-
-      .alert-error {
-        background: #ffecec;
-        color: var(--error);
-        border: 1px solid #f5c6cb;
-      }
-
-      .alert-success {
-        background: #e6fffa;
-        color: var(--success);
-        border: 1px solid #c3e6cb;
-      }
-
-      .login-footer {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 14px;
-        color: #777;
-      }
-
-      .login-footer a {
-        color: var(--secondary);
-        text-decoration: none;
-      }
-
-      .powered-by {
-        text-align: center;
-        margin-top: 15px;
-        font-size: 12px;
-        color: #999;
-      }
-
-      .system-features {
-        margin-top: 25px;
-        padding-top: 20px;
-        border-top: 1px solid #eee;
-      }
-
-      .system-features h3 {
-        text-align: center;
-        margin-bottom: 15px;
-        color: var(--dark);
-      }
-
-      .feature-list {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-
-      .feature {
-        background: #f8f9fa;
-        padding: 10px;
-        border-radius: 5px;
-        font-size: 12px;
-        color: #666;
-        text-align: center;
-      }
-
-      .feature i {
-        display: block;
-        margin-bottom: 5px;
-        color: var(--secondary);
-        font-size: 16px;
-      }
-
-      @media (max-width: 768px) {
-        .feature-list {
-          grid-template-columns: 1fr;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-      }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, #572f32, #14191f);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo i {
+            margin-right: 10px;
+            color: #000000;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+        
+        nav ul li {
+            margin-left: 25px;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        nav ul li a:hover {
+            color: #000000;
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: url('background.avif') no-repeat center center/cover;
+            height: 500px;
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+        }
+        
+        .hero-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .hero p {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: #60748b;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #2b71c0;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Services Section */
+        .services {
+            padding: 80px 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .section-title h2 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: #e74c3c;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .service-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .service-img {
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .service-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.5s ease;
+        }
+        
+        .service-card:hover .service-img img {
+            transform: scale(1.1);
+        }
+        
+        .service-content {
+            padding: 25px;
+        }
+        
+        .service-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .service-content p {
+            margin-bottom: 20px;
+            color: #666;
+        }
+        
+        .service-icon {
+            font-size: 2.5rem;
+            color: #000000;
+            margin-bottom: 20px;
+        }
+        
+        /* Membership Section */
+        .membership {
+            background: linear-gradient(135deg, #2c3e50, #000000);
+            padding: 80px 0;
+            color: white;
+            text-align: center;
+        }
+        
+        .membership h2 {
+            font-size: 2.5rem;
+            margin-bottom: 40px;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+        
+        .pricing-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 40px 30px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .pricing-card h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+        
+        .price {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            color: #b41212;
+        }
+        
+        .price span {
+            font-size: 1rem;
+            font-weight: 400;
+        }
+        
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+        
+        .pricing-features li {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Testimonials */
+        .testimonials {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+        
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+        
+        .testimonial-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .testimonial-text {
+            font-style: italic;
+            margin-bottom: 20px;
+            color: #555;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+        }
+        
+        .author-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 15px;
+        }
+        
+        .author-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .author-info h4 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        /* Footer */
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 60px 0 30px;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-column h3 {
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: #e74c3c;
+        }
+        
+        .footer-column p {
+            margin-bottom: 20px;
+            color: #bbb;
+        }
+        
+        .footer-links {
+            list-style: none;
+        }
+        
+        .footer-links li {
+            margin-bottom: 15px;
+        }
+        
+        .footer-links a {
+            color: #bbb;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: #e74c3c;
+            padding-left: 5px;
+        }
+        
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .social-icons a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .social-icons a:hover {
+            background: #3c9ae7;
+            transform: translateY(-3px);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            nav ul {
+                margin-top: 20px;
+                justify-content: center;
+            }
+            
+            nav ul li {
+                margin: 0 10px;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .hero p {
+                font-size: 1.2rem;
+            }
+        }
     </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="login-card">
-        <div class="login-header">
-          <div class="staff-badge">STAFF</div>
-          <h1>Body Tone Gym</h1>
-          <p>Staff Management System</p>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-dumbbell"></i>
+                    Body Tone Gym
+                </div>
+                <nav>
+                    <ul>
+                        
+                        <li><a href="member-login.html">Sign In</a></li>
+                    </ul>
+                </nav>
+            </div>
         </div>
+    </header>
 
-        <div class="login-body">
-          <div id="errorAlert" class="alert alert-error">
-            Invalid email or password. Please try again.
-          </div>
-
-          <div id="successAlert" class="alert alert-success">
-            Login successful! Redirecting...
-          </div>
-
-          <form id="loginForm">
-            <div class="form-group">
-              <label for="email">Email Address</label>
-              <input
-                type="email"
-                id="email"
-                class="form-control"
-                placeholder="Enter your staff email"
-                required
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="password">Password</label>
-              <input
-                type="password"
-                id="password"
-                class="form-control"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-
-            <button type="submit" class="btn">Staff Login</button>
-          </form>
-
-          <div class="system-features">
-            <h3>Management System Features</h3>
-            <div class="feature-list">
-              <div class="feature">
-                <i class="fas fa-qrcode"></i>
-                <div>QR Code Check-in</div>
-              </div>
-              <div class="feature">
-                <i class="fas fa-user-plus"></i>
-                <div>Member Registration</div>
-              </div>
-              <div class="feature">
-                <i class="fas fa-money-bill-wave"></i>
-                <div>Payment Tracking</div>
-              </div>
-              <div class="feature">
-                <i class="fas fa-wifi"></i>
-                <div>Offline Functionality</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="login-footer">
-            <p>Having trouble? <a href="#">Contact administrator</a></p>
-          </div>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Transform Your Body, Transform Your Life</h1>
+            <p>Discover our premium gym services designed to help you achieve your fitness goals</p>
+            <a href="member-login.html" class="btn">Start Your Journey Today</a>
         </div>
+    </section>
 
-        <div class="powered-by">Powered by Supabase</div>
-      </div>
-    </div>
+    <!-- Services Section -->
+    <section class="services">
+        <div class="container">
+            <div class="section-title">
+                <h2>Our Services</h2>
+                <p>We offer a wide range of fitness services to meet your needs</p>
+            </div>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-img">
+                        <img src="personal_training.avif" alt="Personal Training">
+                    </div>
+                    <div class="service-content">
+                        <div class="service-icon">
+                            <i class="fas fa-dumbbell"></i>
+                        </div>
+                        <h3>Personal Training</h3>
+                        <p>One-on-one sessions with certified trainers who create customized workout plans tailored to your specific goals and fitness level.</p>
+                        <a href="#" class="btn">Learn More</a>
+                    </div>
+                </div>
+                
+                <div class="service-card">
+                    <div class="service-img">
+                        <img src="background.avif" alt="Group Classes">
+                    </div>
+                    <div class="service-content">
+                        <div class="service-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <h3>Group Fitness Classes</h3>
+                        <p>Join our energetic group classes including yoga, HIIT, spin, Zumba, and more. Fun, motivating, and suitable for all levels.</p>
+                        <a href="#" class="btn">Learn More</a>
+                    </div>
+                </div>
+                
+                <div class="service-card">
+                    <div class="service-img">
+                        <img src="cardio.jpg" alt="Cardio Equipment">
+                    </div>
+                    <div class="service-content">
+                        <div class="service-icon">
+                            <i class="fas fa-running"></i>
+                        </div>
+                        <h3>Cardio Zone</h3>
+                        <p>State-of-the-art cardio equipment including treadmills, ellipticals, stationary bikes, and rowing machines with personal viewing screens.</p>
+                        <a href="#" class="btn">Learn More</a>
+                    </div>
+                </div>
+                
+                <div class="service-card">
+                    <div class="service-img">
+                        <img src="strenght.avif" alt="Strength Training">
+                    </div>
+                    <div class="service-content">
+                        <div class="service-icon">
+                            <i class="fas fa-weight-hanging"></i>
+                        </div>
+                        <h3>Strength Training</h3>
+                        <p>Extensive free weights area, resistance machines, and functional training equipment for building muscle and strength.</p>
+                        <a href="#" class="btn">Learn More</a>
+                    </div>
+                </div>
+                
+                <div class="service-card">
+                    <div class="service-img">
+                        <img src="yoga.avif" alt="Yoga Classes">
+                    </div>
+                    <div class="service-content">
+                        <div class="service-icon">
+                            <i class="fas fa-spa"></i>
+                        </div>
+                        <h3>Yoga & Pilates</h3>
+                        <p>Improve flexibility, balance, and mental focus with our yoga and Pilates classes for all experience levels.</p>
+                        <a href="#" class="btn">Learn More</a>
+                    </div>
+                </div>
+                
+                <div class="service-card">
+                    <div class="service-img">
+                        <img src="Nutrition.jpg" alt="Nutrition Planning">
+                    </div>
+                    <div class="service-content">
+                        <div class="service-icon">
+                            <i class="fas fa-apple-alt"></i>
+                        </div>
+                        <h3>Nutrition Planning</h3>
+                        <p>Customized nutrition plans and consultations with certified dietitians to complement your workout regimen.</p>
+                        <a href="#" class="btn">Learn More</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Membership Section -->
+    <section class="membership">
+        <div class="container">
+            <h2>Membership Plans</h2>
+            <p>Choose the plan that works best for you</p>
+            
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Student </h3>
+                    <div class="price">R299.99<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li>Access to cardio & strength areas</li>
+                        <li>Free fitness assessment</li>
+                        <li>Locker room access</li>
+                        <li>No contract required</li>
+                    </ul>
+                    <a href="#" class="btn">Get Started</a>
+                </div>
+                
+                <div class="pricing-card">
+                    <h3>Basic</h3>
+                    <div class="price">R499.99<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li>All Basic features</li>
+                        <li>Unlimited group classes</li>
+                        <li>3 personal training sessions</li>
+                        <li>Nutrition consultation</li>
+                    </ul>
+                    <a href="#" class="btn">Get Started</a>
+                </div>
+                
+                <div class="pricing-card">
+                    <h3>Premium</h3>
+                    <div class="price">R899.99<span>/month</span></div>
+                    <ul class="pricing-features">
+                        <li>All Premium features</li>
+                        <li>Unlimited personal training</li>
+                        <li>24/7 gym access</li>
+                        <li>Complimentary recovery services</li>
+                    </ul>
+                    <a href="#" class="btn">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="container">
+            <div class="section-title">
+                <h2>Success Stories</h2>
+                <p>Hear from our members</p>
+            </div>
+            
+            <div class="testimonial-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"Body Tone Gym transformed my life. The trainers are knowledgeable and supportive, and the community keeps me motivated."</p>
+                    <div class="testimonial-author">
+                        <div class="author-img">
+                            <img src="sara.jpg" alt="Sarah Johnson">
+                        </div>
+                        <div class="author-info">
+                            <h4>Luyanda Potwane</h4>
+                            <p>Lost 35Kg's in 6 months</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"The variety of classes and equipment is incredible. I never get bored with my workouts and I've never been in better shape!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-img">
+                            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Michael Chen">
+                        </div>
+                        <div class="author-info">
+                            <h4>Michael Chen</h4>
+                            <p>Member for 2 years</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"The nutrition planning service changed everything for me. I finally understand how to fuel my body for optimal performance."</p>
+                    <div class="testimonial-author">
+                        <div class="author-img">
+                            <img src="michel.webp" alt="Jessica Williams">
+                        </div>
+                        <div class="author-info">
+                            <h4>Siyabonga Nkosi </h4>
+                            <p>Ran his first marathon</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Body Tone Gym</h3>
+                    <p>Helping you achieve your fitness goals with state-of-the-art facilities, expert trainers, and a supportive community.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">Services</a></li>
+                        <li><a href="#">Membership</a></li>
+                        <li><a href="#">Schedule</a></li>
+                        <li><a href="#">About Us</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Contact Us</h3>
+                    <p><i class="fas fa-map-marker-alt"></i> 123 Fitness Street, Health City</p>
+                    <p><i class="fas fa-phone"></i> (555) 123-4567</p>
+                    <p><i class="fas fa-envelope"></i> info@bodytonegym.com</p>
+                    <p><i class="fas fa-clock"></i> Mon-Fri: 5am-11pm, Weekends: 7am-9pm</p>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2023 Body Tone Gym. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 
     <script>
-      // Initialize Supabase
-      const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
-      const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
-
-      const supabase = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-      );
-
-      // Form submission handler
-      document
-        .getElementById("loginForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          const email = document.getElementById("email").value;
-          const password = document.getElementById("password").value;
-
-          // Hide previous alerts
-          document.getElementById("errorAlert").style.display = "none";
-          document.getElementById("successAlert").style.display = "none";
-
-          try {
-            // Try to authenticate as staff
-            const { data: staffData, error: staffError } = await supabase
-              .from("staff")
-              .select("staffid, email, plainpassword, role")
-              .eq("email", email)
-              .eq("plainpassword", password)
-              .single();
-            console.log(staffData, staffError);
-            if (!staffError && staffData) {
-              // Successful staff login
-              showSuccess("Staff login successful!");
-              // Store user data in localStorage
-              localStorage.setItem(
-                "user",
-                JSON.stringify({
-                  id: staffData.staffid,
-                  email: staffData.email,
-                  role: staffData.role.toLowerCase(),
-                  status: "active",
-                })
-              );
-
-              // Redirect to appropriate dashboard based on role
-              setTimeout(() => {
-                if (staffData.role.toLowerCase() === "admin") {
-                  window.location.href = "admin-dashboard.html";
-                } else {
-                  window.location.href = "staff-dashboard.html";
-                }
-              }, 1500);
-              return;
-            }
-
-            // If we get here, authentication failed
-            showError("Invalid email or password. Please try again.");
-          } catch (error) {
-            console.error("Login error:", error);
-            showError("An error occurred during login. Please try again.");
-          }
+        // Simple JavaScript for interactive elements
+        document.addEventListener('DOMContentLoaded', function() {
+            const serviceCards = document.querySelectorAll('.service-card');
+            
+            serviceCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px)';
+                    this.style.boxShadow = '0 15px 30px rgba(0, 0, 0, 0.15)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.1)';
+                });
+            });
+            
+            // Animate pricing cards on scroll
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = 1;
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, observerOptions);
+            
+            const pricingCards = document.querySelectorAll('.pricing-card');
+            pricingCards.forEach(card => {
+                card.style.opacity = 0;
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                observer.observe(card);
+            });
         });
-
-      // Helper functions to show alerts
-      function showError(message) {
-        const errorAlert = document.getElementById("errorAlert");
-        errorAlert.textContent = message;
-        errorAlert.style.display = "block";
-      }
-
-      function showSuccess(message) {
-        const successAlert = document.getElementById("successAlert");
-        successAlert.textContent = message;
-        successAlert.style.display = "block";
-      }
-
-      // Check if user is already logged in
-      window.addEventListener("DOMContentLoaded", () => {
-        const user = localStorage.getItem("user");
-        if (user) {
-          const userData = JSON.parse(user);
-          if (userData.role === "admin") {
-            window.location.href = "admin-dashboard.html";
-          } else if (
-            userData.role === "staff" ||
-            userData.role === "trainer" ||
-            userData.role === "cashier"
-          ) {
-            window.location.href = "staff-dashboard.html";
-          }
-        }
-      });
     </script>
-  </body>
+</body>
 </html>
