@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Body Tone Gym - QR Check-In</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --primary: #2c3e50;
+        --secondary: #3498db;
+        --accent: #e74c3c;
+        --light: #ecf0f1;
+        --dark: #2c3e50;
+        --success: #2ecc71;
+        --warning: #f39c12;
+        --error: #e74c3c;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: #f5f7fa;
+        color: #333;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      .header {
+        background: var(--primary);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        font-size: 20px;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+      }
+
+      .user-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: var(--secondary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+
+      .logout-btn {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-left: 15px;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+
+      @media (max-width: 900px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .card-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: var(--dark);
+        padding-bottom: 10px;
+        border-bottom: 2px solid #eee;
+        display: flex;
+        align-items: center;
+      }
+
+      .card-title i {
+        margin-right: 10px;
+      }
+
+      .scanner-container {
+        position: relative;
+        width: 100%;
+        margin: 20px 0;
+      }
+
+      #video {
+        width: 100%;
+        border-radius: 8px;
+        background: #f0f0f0;
+      }
+
+      .scan-region {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 70%;
+        height: 70%;
+        border: 3px solid var(--secondary);
+        border-radius: 8px;
+        box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.3);
+      }
+
+      .scan-line {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: var(--secondary);
+        animation: scan 2s infinite linear;
+      }
+
+      @keyframes scan {
+        0% {
+          top: 0;
+        }
+        50% {
+          top: calc(100% - 3px);
+        }
+        100% {
+          top: 0;
+        }
+      }
+
+      .scanner-controls {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .btn {
+        padding: 10px 15px;
+        background: var(--secondary);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s;
+        display: flex;
+        align-items: center;
+      }
+
+      .btn i {
+        margin-right: 5px;
+      }
+
+      .btn:hover {
+        background: #2980b9;
+      }
+
+      .btn-success {
+        background: var(--success);
+      }
+
+      .btn-success:hover {
+        background: #27ae60;
+      }
+
+      .btn-warning {
+        background: var(--warning);
+      }
+
+      .btn-warning:hover {
+        background: #e67e22;
+      }
+
+      .btn-error {
+        background: var(--error);
+      }
+
+      .btn-error:hover {
+        background: #c0392b;
+      }
+
+      .manual-input {
+        margin-top: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--dark);
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 10px 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+
+      .result-container {
+        text-align: center;
+      }
+
+      .status-icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+      }
+
+      .status-approved {
+        color: var(--success);
+      }
+
+      .status-denied {
+        color: var(--error);
+      }
+
+      .status-warning {
+        color: var(--warning);
+      }
+
+      .status-message {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 15px;
+      }
+
+      .member-details {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        text-align: left;
+      }
+
+      .member-details h3 {
+        margin-bottom: 15px;
+        color: var(--dark);
+        text-align: center;
+      }
+
+      .detail-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .detail-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #666;
+      }
+
+      .attendance-history {
+        margin-top: 30px;
+      }
+
+      .attendance-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+
+      .attendance-table th {
+        background: #f8f9fa;
+        padding: 10px;
+        text-align: left;
+        font-weight: 600;
+        color: var(--dark);
+      }
+
+      .attendance-table td {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .no-data {
+        text-align: center;
+        padding: 20px;
+        color: #777;
+      }
+
+      .no-data i {
+        font-size: 40px;
+        margin-bottom: 10px;
+        color: #ddd;
+      }
+
+      .alert {
+        padding: 12px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .alert-error {
+        background: #ffecec;
+        color: var(--error);
+        border: 1px solid #f5c6cb;
+      }
+
+      .alert-info {
+        background: #e6f3ff;
+        color: var(--secondary);
+        border: 1px solid #b3d9ff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Body Tone Gym - QR Check-In System</h1>
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">S</div>
+        <span id="userName">Staff User</span>
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="card">
+        <h2 class="card-title">
+          <i class="fas fa-qrcode"></i> QR Code Scanner
+        </h2>
+
+        <div id="errorAlert" class="alert alert-error">
+          Error accessing camera. Please check permissions.
+        </div>
+
+        <div id="infoAlert" class="alert alert-info">
+          Point the camera at a member's QR code to scan it.
+        </div>
+
+        <div class="scanner-container">
+          <video id="video" playsinline></video>
+          <div class="scan-region">
+            <div class="scan-line"></div>
+          </div>
+        </div>
+
+        <div class="scanner-controls">
+          <button class="btn" id="startScannerBtn">
+            <i class="fas fa-play"></i> Start Scanner
+          </button>
+          <button class="btn btn-warning" id="stopScannerBtn">
+            <i class="fas fa-stop"></i> Stop Scanner
+          </button>
+          <button class="btn btn-error" id="switchCameraBtn">
+            <i class="fas fa-camera"></i> Switch Camera
+          </button>
+        </div>
+
+        <div class="manual-input">
+          <div class="form-group">
+            <label for="manualCode">Or enter QR code manually:</label>
+            <input
+              type="text"
+              id="manualCode"
+              class="form-control"
+              placeholder="Enter QR code"
+            />
+          </div>
+          <button class="btn" id="manualSubmitBtn">
+            <i class="fas fa-check"></i> Check Membership
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">
+          <i class="fas fa-user-check"></i> Check-In Result
+        </h2>
+
+        <div class="result-container" id="resultContainer">
+          <div class="no-data">
+            <i class="fas fa-qrcode"></i>
+            <div>Scan a QR code to check membership status</div>
+          </div>
+        </div>
+
+        <div class="attendance-history">
+          <h3>Recent Check-Ins</h3>
+          <table class="attendance-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Time</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceTableBody">
+              <tr>
+                <td colspan="3" class="no-data">No recent check-ins</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize Supabase
+      const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+
+      const supabase = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+      // Global variables
+      let videoStream = null;
+      let currentFacingMode = "environment"; // 'environment' for back camera, 'user' for front
+      let scanningInterval = null;
+      let recentCheckIns = [];
+
+      // Check if user is logged in
+      document.addEventListener("DOMContentLoaded", function () {
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || (user.role !== "staff" && user.role !== "admin")) {
+          window.location.href = "staff-login.html";
+          return;
+        }
+
+        // Display user info
+        document.getElementById("userName").textContent =
+          user.email.split("@")[0];
+        document.getElementById("userAvatar").textContent = user.email
+          .charAt(0)
+          .toUpperCase();
+
+        // Show info alert
+        document.getElementById("infoAlert").style.display = "block";
+
+        // Load recent check-ins
+        loadRecentCheckIns();
+      });
+
+      // Start scanner button
+      document
+        .getElementById("startScannerBtn")
+        .addEventListener("click", startScanner);
+
+      // Stop scanner button
+      document
+        .getElementById("stopScannerBtn")
+        .addEventListener("click", stopScanner);
+
+      // Switch camera button
+      document
+        .getElementById("switchCameraBtn")
+        .addEventListener("click", switchCamera);
+
+      // Manual submit button
+      document
+        .getElementById("manualSubmitBtn")
+        .addEventListener("click", function () {
+          const manualCode = document.getElementById("manualCode").value.trim();
+          if (manualCode) {
+            processQRCode(manualCode);
+          }
+        });
+
+      // Start the scanner
+      async function startScanner() {
+        try {
+          stopScanner(); // Stop any existing stream
+
+          const video = document.getElementById("video");
+          videoStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: currentFacingMode,
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+          });
+
+          video.srcObject = videoStream;
+          video.setAttribute("playsinline", true); // Required to work on iOS
+          await video.play();
+
+          // Start scanning for QR codes
+          scanningInterval = setInterval(scanQRCode, 100);
+        } catch (error) {
+          console.error("Error accessing camera:", error);
+          document.getElementById("errorAlert").style.display = "block";
+        }
+      }
+
+      // Stop the scanner
+      function stopScanner() {
+        if (scanningInterval) {
+          clearInterval(scanningInterval);
+          scanningInterval = null;
+        }
+
+        if (videoStream) {
+          videoStream.getTracks().forEach((track) => track.stop());
+          videoStream = null;
+        }
+
+        const video = document.getElementById("video");
+        video.srcObject = null;
+      }
+
+      // Switch between front and back camera
+      function switchCamera() {
+        currentFacingMode =
+          currentFacingMode === "environment" ? "user" : "environment";
+        startScanner();
+      }
+
+      // Scan for QR codes in the video stream
+      function scanQRCode() {
+        const video = document.getElementById("video");
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+
+        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+          const imageData = context.getImageData(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+          );
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert",
+          });
+
+          if (code) {
+            // QR code found!
+            stopScanner();
+            processQRCode(code.data);
+          }
+        }
+      }
+
+      // Process the scanned QR code
+      async function processQRCode(qrCode) {
+        try {
+          // Look up member by QR code
+          const { data: memberData, error: memberError } = await supabase
+            .from("member")
+            .select("*")
+            .eq("qrcode", qrCode)
+            .single();
+
+          if (memberError) {
+            showResult("error", "Invalid QR code. No member found.");
+            return;
+          }
+
+          // Get membership status
+          const { data: membershipData, error: membershipError } =
+            await supabase
+              .from("membership")
+              .select("*")
+              .eq("memberid", memberData.memberid)
+              .order("startdate", { ascending: false })
+              .limit(1)
+              .single();
+
+          if (membershipError) {
+            showResult("error", "No membership found for this member.");
+            return;
+          }
+
+          // Record attendance
+          const { error: attendanceError } = await supabase
+            .from("attendance")
+            .insert([
+              {
+                memberid: memberData.memberid,
+                checkintime: new Date().toISOString(),
+                isoffline: false,
+                synced: true,
+              },
+            ]);
+
+          if (attendanceError) {
+            console.error("Error recording attendance:", attendanceError);
+          }
+
+          // Show appropriate result based on membership status
+          if (
+            membershipData.status === "Paid" &&
+            new Date(membershipData.enddate) >= new Date()
+          ) {
+            showResult("success", "Access Granted", memberData, membershipData);
+
+            // Add to recent check-ins
+            addRecentCheckIn(memberData, "Granted");
+          } else {
+            showResult(
+              "denied",
+              "Membership Expired or Payment Due",
+              memberData,
+              membershipData
+            );
+
+            // Add to recent check-ins
+            addRecentCheckIn(memberData, "Denied");
+          }
+        } catch (error) {
+          console.error("Error processing QR code:", error);
+          showResult("error", "An error occurred. Please try again.");
+        }
+      }
+
+      // Show the result of the check-in attempt
+      function showResult(
+        status,
+        message,
+        memberData = null,
+        membershipData = null
+      ) {
+        const resultContainer = document.getElementById("resultContainer");
+
+        if (status === "success") {
+          resultContainer.innerHTML = `
+                    <div class="status-icon status-approved">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="status-message">${message}</div>
+                    <div class="member-details">
+                        <h3>Member Information</h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Name:</span>
+                            <span>${memberData.fname} ${memberData.lname}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Membership:</span>
+                            <span>${membershipData.type}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Valid Until:</span>
+                            <span>${new Date(
+                              membershipData.enddate
+                            ).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" id="continueBtn" style="margin-top: 20px;">
+                        <i class="fas fa-check"></i> Continue
+                    </button>
+                `;
+
+          document
+            .getElementById("continueBtn")
+            .addEventListener("click", function () {
+              resultContainer.innerHTML = `
+                        <div class="no-data">
+                            <i class="fas fa-qrcode"></i>
+                            <div>Scan a QR code to check membership status</div>
+                        </div>
+                    `;
+              startScanner();
+            });
+        } else if (status === "denied") {
+          resultContainer.innerHTML = `
+                    <div class="status-icon status-denied">
+                        <i class="fas fa-times-circle"></i>
+                    </div>
+                    <div class="status-message">${message}</div>
+                    <div class="member-details">
+                        <h3>Member Information</h3>
+                        <div class="detail-item">
+                            <span class="detail-label">Name:</span>
+                            <span>${memberData.fname} ${memberData.lname}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Membership:</span>
+                            <span>${membershipData.type}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span>${membershipData.status}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Valid Until:</span>
+                            <span>${new Date(
+                              membershipData.enddate
+                            ).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <button class="btn" id="tryAgainBtn" style="margin-top: 20px;">
+                        <i class="fas fa-redo"></i> Try Again
+                    </button>
+                `;
+
+          document
+            .getElementById("tryAgainBtn")
+            .addEventListener("click", function () {
+              resultContainer.innerHTML = `
+                        <div class="no-data">
+                            <i class="fas fa-qrcode"></i>
+                            <div>Scan a QR code to check membership status</div>
+                        </div>
+                    `;
+              startScanner();
+            });
+        } else {
+          resultContainer.innerHTML = `
+                    <div class="status-icon status-warning">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="status-message">${message}</div>
+                    <button class="btn" id="errorTryAgainBtn" style="margin-top: 20px;">
+                        <i class="fas fa-redo"></i> Try Again
+                    </button>
+                `;
+
+          document
+            .getElementById("errorTryAgainBtn")
+            .addEventListener("click", function () {
+              resultContainer.innerHTML = `
+                        <div class="no-data">
+                            <i class="fas fa-qrcode"></i>
+                            <div>Scan a QR code to check membership status</div>
+                        </div>
+                    `;
+              startScanner();
+            });
+        }
+      }
+
+      // Add to recent check-ins list
+      function addRecentCheckIn(memberData, status) {
+        recentCheckIns.unshift({
+          name: `${memberData.fname} ${memberData.lname}`,
+          time: new Date().toLocaleTimeString(),
+          status: status,
+        });
+
+        // Keep only the last 5 check-ins
+        if (recentCheckIns.length > 5) {
+          recentCheckIns.pop();
+        }
+
+        updateRecentCheckIns();
+      }
+
+      // Update the recent check-ins table
+      function updateRecentCheckIns() {
+        const tableBody = document.getElementById("attendanceTableBody");
+
+        if (recentCheckIns.length === 0) {
+          tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="no-data">No recent check-ins</td>
+                    </tr>
+                `;
+          return;
+        }
+
+        tableBody.innerHTML = recentCheckIns
+          .map(
+            (checkIn) => `
+                <tr>
+                    <td>${checkIn.name}</td>
+                    <td>${checkIn.time}</td>
+                    <td><span class="badge ${
+                      checkIn.status === "Granted"
+                        ? "badge-success"
+                        : "badge-error"
+                    }">${checkIn.status}</span></td>
+                </tr>
+            `
+          )
+          .join("");
+      }
+
+      // Load recent check-ins from database
+      async function loadRecentCheckIns() {
+        try {
+          // Get check-ins from the last 4 hours
+          const fourHoursAgo = new Date();
+          fourHoursAgo.setHours(fourHoursAgo.getHours() - 4);
+
+          const { data: attendanceData, error } = await supabase
+            .from("Attendance")
+            .select(
+              `
+                        *,
+                        Member (fname, lname)
+                    `
+            )
+            .gte("checkintime", fourHoursAgo.toISOString())
+            .order("checkintime", { ascending: false })
+            .limit(5);
+
+          if (error) throw error;
+
+          if (attendanceData && attendanceData.length > 0) {
+            recentCheckIns = attendanceData.map((attendance) => ({
+              name: `${attendance.Member.fname} ${attendance.Member.lname}`,
+              time: new Date(attendance.checkintime).toLocaleTimeString(),
+              status: "Granted",
+            }));
+
+            updateRecentCheckIns();
+          }
+        } catch (error) {
+          console.error("Error loading recent check-ins:", error);
+        }
+      }
+
+      // Logout functionality
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        stopScanner();
+        localStorage.removeItem("user");
+        window.location.href = "staff-login.html";
+      });
+
+      // Clean up when leaving the page
+      window.addEventListener("beforeunload", () => {
+        stopScanner();
+      });
+    </script>
+  </body>
+</html>

@@ -3,12 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Body Tone Gym - Staff Login</title>
+    <title>Body Tone Gym - Member Login</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
     <style>
       :root {
         --primary: #2c3e50;
@@ -29,10 +25,7 @@
       }
 
       body {
-        background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-          url("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8Z3ltJTIwYmFja2dyb3VuZHxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80");
-        background-size: cover;
-        background-position: center;
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
         color: #333;
         line-height: 1.6;
         min-height: 100vh;
@@ -53,9 +46,9 @@
       .login-card {
         background: white;
         border-radius: 10px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
         width: 100%;
-        max-width: 450px;
+        max-width: 400px;
         overflow: hidden;
       }
 
@@ -64,7 +57,6 @@
         color: white;
         padding: 25px;
         text-align: center;
-        position: relative;
       }
 
       .login-header h1 {
@@ -75,18 +67,6 @@
       .login-header p {
         opacity: 0.8;
         font-size: 14px;
-      }
-
-      .staff-badge {
-        position: absolute;
-        top: 15px;
-        right: 15px;
-        background: var(--accent);
-        color: white;
-        padding: 5px 10px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
       }
 
       .login-body {
@@ -137,6 +117,14 @@
         background: #2980b9;
       }
 
+      .btn-secondary {
+        background: var(--primary);
+      }
+
+      .btn-secondary:hover {
+        background: #1c2833;
+      }
+
       .alert {
         padding: 12px;
         border-radius: 5px;
@@ -168,51 +156,32 @@
         text-decoration: none;
       }
 
+      .demo-accounts {
+        margin-top: 25px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+        font-size: 13px;
+      }
+
+      .demo-accounts h3 {
+        margin-bottom: 10px;
+        color: var(--dark);
+      }
+
+      .demo-account {
+        margin-bottom: 8px;
+        padding: 8px;
+        background: white;
+        border-radius: 4px;
+        border-left: 3px solid var(--secondary);
+      }
+
       .powered-by {
         text-align: center;
         margin-top: 15px;
         font-size: 12px;
         color: #999;
-      }
-
-      .system-features {
-        margin-top: 25px;
-        padding-top: 20px;
-        border-top: 1px solid #eee;
-      }
-
-      .system-features h3 {
-        text-align: center;
-        margin-bottom: 15px;
-        color: var(--dark);
-      }
-
-      .feature-list {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-      }
-
-      .feature {
-        background: #f8f9fa;
-        padding: 10px;
-        border-radius: 5px;
-        font-size: 12px;
-        color: #666;
-        text-align: center;
-      }
-
-      .feature i {
-        display: block;
-        margin-bottom: 5px;
-        color: var(--secondary);
-        font-size: 16px;
-      }
-
-      @media (max-width: 768px) {
-        .feature-list {
-          grid-template-columns: 1fr;
-        }
       }
     </style>
   </head>
@@ -220,9 +189,8 @@
     <div class="container">
       <div class="login-card">
         <div class="login-header">
-          <div class="staff-badge">STAFF</div>
           <h1>Body Tone Gym</h1>
-          <p>Staff Management System</p>
+          <p>Member & Staff Login Portal</p>
         </div>
 
         <div class="login-body">
@@ -241,7 +209,7 @@
                 type="email"
                 id="email"
                 class="form-control"
-                placeholder="Enter your staff email"
+                placeholder="Enter your email"
                 required
               />
             </div>
@@ -257,33 +225,34 @@
               />
             </div>
 
-            <button type="submit" class="btn">Staff Login</button>
+            <button type="submit" class="btn">Login</button>
           </form>
 
-          <div class="system-features">
-            <h3>Management System Features</h3>
-            <div class="feature-list">
-              <div class="feature">
-                <i class="fas fa-qrcode"></i>
-                <div>QR Code Check-in</div>
-              </div>
-              <div class="feature">
-                <i class="fas fa-user-plus"></i>
-                <div>Member Registration</div>
-              </div>
-              <div class="feature">
-                <i class="fas fa-money-bill-wave"></i>
-                <div>Payment Tracking</div>
-              </div>
-              <div class="feature">
-                <i class="fas fa-wifi"></i>
-                <div>Offline Functionality</div>
-              </div>
+          <div class="demo-accounts">
+            <h3>Demo Accounts (Click to use)</h3>
+            <div
+              class="demo-account"
+              onclick="fillDemo('sisonke.g@email.com', 'sisonke123')"
+            >
+              <strong>Member:</strong> sisonke.g@email.com / sisonke123
+            </div>
+            <div
+              class="demo-account"
+              onclick="fillDemo('john.doe@student.com', 'john123')"
+            >
+              <strong>Student:</strong> john.doe@student.com / john123
+            </div>
+            <div
+              class="demo-account"
+              onclick="fillDemo('jane.admin@gym.com', 'admin123')"
+            >
+              <strong>Admin:</strong> jane.admin@gym.com / admin123
             </div>
           </div>
 
           <div class="login-footer">
-            <p>Having trouble? <a href="#">Contact administrator</a></p>
+            <p>Don't have an account? <a href="#">Contact gym staff</a></p>
+            <p><a href="#">Forgot your password?</a></p>
           </div>
         </div>
 
@@ -293,9 +262,9 @@
 
     <script>
       // Initialize Supabase
-      const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+      const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co"; // Replace with your Supabase URL
       const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU"; // Replace with your Supabase anon key
 
       const supabase = window.supabase.createClient(
         SUPABASE_URL,
@@ -316,14 +285,52 @@
           document.getElementById("successAlert").style.display = "none";
 
           try {
-            // Try to authenticate as staff
-            const { data: staffData, error: staffError } = await supabase
-              .from("staff")
-              .select("staffid, email, plainpassword, role")
+            // First try to authenticate as a member
+            console.log("Attempting member login with:", email);
+            const { data: memberData, error: memberError } = await supabase
+              .from("member")
+              .select("memberid, email, password, status")
               .eq("email", email)
-              .eq("plainpassword", password)
+              .eq("password", password)
               .single();
-            console.log(staffData, staffError);
+
+            console.log("Member login response:", { memberData, memberError });
+            if (!memberError && memberData) {
+              if (memberData.status !== "Active") {
+                showError(
+                  "Your account is not active. Please contact support."
+                );
+                return;
+              }
+
+              // Successful member login
+              showSuccess("Member login successful!");
+              // Store user data in localStorage
+              localStorage.setItem(
+                "user",
+                JSON.stringify({
+                  id: memberData.MemberID,
+                  email: memberData.Email,
+                  role: "member",
+                  status: memberData.Status,
+                })
+              );
+
+              // Redirect to member dashboard after a brief delay
+              setTimeout(() => {
+                window.location.href = "member-dashboard.html";
+              }, 1500);
+              return;
+            }
+
+            // If not a member, try to authenticate as staff
+            const { data: staffData, error: staffError } = await supabase
+              .from("Staff")
+              .select("StaffID, Email, PlainPassword, Role")
+              .eq("Email", email)
+              .eq("PlainPassword", password)
+              .single();
+
             if (!staffError && staffData) {
               // Successful staff login
               showSuccess("Staff login successful!");
@@ -331,16 +338,16 @@
               localStorage.setItem(
                 "user",
                 JSON.stringify({
-                  id: staffData.staffid,
-                  email: staffData.email,
-                  role: staffData.role.toLowerCase(),
+                  id: staffData.StaffID,
+                  email: staffData.Email,
+                  role: staffData.Role.toLowerCase(),
                   status: "active",
                 })
               );
 
               // Redirect to appropriate dashboard based on role
               setTimeout(() => {
-                if (staffData.role.toLowerCase() === "admin") {
+                if (staffData.Role.toLowerCase() === "admin") {
                   window.location.href = "admin-dashboard.html";
                 } else {
                   window.location.href = "staff-dashboard.html";
@@ -370,18 +377,22 @@
         successAlert.style.display = "block";
       }
 
+      // Function to fill demo account details
+      function fillDemo(email, password) {
+        document.getElementById("email").value = email;
+        document.getElementById("password").value = password;
+      }
+
       // Check if user is already logged in
       window.addEventListener("DOMContentLoaded", () => {
         const user = localStorage.getItem("user");
         if (user) {
           const userData = JSON.parse(user);
-          if (userData.role === "admin") {
+          if (userData.role === "member") {
+            window.location.href = "member-dashboard.html";
+          } else if (userData.role === "admin") {
             window.location.href = "admin-dashboard.html";
-          } else if (
-            userData.role === "staff" ||
-            userData.role === "trainer" ||
-            userData.role === "cashier"
-          ) {
+          } else {
             window.location.href = "staff-dashboard.html";
           }
         }
