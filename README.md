@@ -3,6 +3,7 @@
 A simple, affordable digital system to replace Body Tone Gym's paper forms and spreadsheets.  
 The system uses **QR codes** to check members in and track their payments, helping the gym stop lost revenue at the door.
 
+Live Demo:https://chr-iss.github.io/Body_tone/admin-login.html
 ---
 
 ## 🚀 Features
