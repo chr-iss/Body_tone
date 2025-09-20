@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Body Tone Gym - Member Registration</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      :root {
+        --primary: #2c3e50;
+        --secondary: #3498db;
+        --accent: #e74c3c;
+        --light: #ecf0f1;
+        --dark: #2c3e50;
+        --success: #2ecc71;
+        --warning: #f39c12;
+        --error: #e74c3c;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: #f5f7fa;
+        color: #333;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      .header {
+        background: var(--primary);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .header h1 {
+        font-size: 20px;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+      }
+
+      .user-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: var(--secondary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+
+      .logout-btn {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-left: 15px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+
+      @media (max-width: 900px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .card-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: var(--dark);
+        padding-bottom: 10px;
+        border-bottom: 2px solid #eee;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--dark);
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      .form-control:focus {
+        border-color: var(--secondary);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      @media (max-width: 600px) {
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .btn {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        background: var(--secondary);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .btn:hover {
+        background: #2980b9;
+      }
+
+      .btn-success {
+        background: var(--success);
+      }
+
+      .btn-success:hover {
+        background: #27ae60;
+      }
+
+      .alert {
+        padding: 12px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .alert-error {
+        background: #ffecec;
+        color: var(--error);
+        border: 1px solid #f5c6cb;
+      }
+
+      .alert-success {
+        background: #e6fffa;
+        color: var(--success);
+        border: 1px solid #c3e6cb;
+      }
+
+      .qr-container {
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      #qrcode {
+        display: inline-block;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .member-details {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .member-details h3 {
+        margin-bottom: 15px;
+        color: var(--dark);
+      }
+
+      .detail-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .detail-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #666;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .nav-tabs {
+        display: flex;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .nav-tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+      }
+
+      .nav-tab.active {
+        border-bottom: 3px solid var(--secondary);
+        color: var(--secondary);
+        font-weight: 600;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Body Tone Gym - Member Registration</h1>
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">S</div>
+        <span id="userName">Staff User</span>
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="card">
+        <h2 class="card-title">Register New Member</h2>
+
+        <div id="errorAlert" class="alert alert-error">
+          Please fill all required fields correctly.
+        </div>
+
+        <div id="successAlert" class="alert alert-success">
+          Member registered successfully!
+        </div>
+
+        <form id="registrationForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="fname">First Name *</label>
+              <input type="text" id="fname" class="form-control" required />
+            </div>
+
+            <div class="form-group">
+              <label for="lname">Last Name *</label>
+              <input type="text" id="lname" class="form-control" required />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" class="form-control" required />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="uname">Username *</label>
+              <input type="text" id="uname" class="form-control" required />
+            </div>
+
+            <div class="form-group">
+              <label for="gender">Gender</label>
+              <select id="gender" class="form-control">
+                <option value="">Select Gender</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password *</label>
+            <input
+              type="password"
+              id="password"
+              class="form-control"
+              required
+            />
+          </div>
+
+          <div class="nav-tabs">
+            <div class="nav-tab active" data-tab="membership">Membership</div>
+            <div class="nav-tab" data-tab="payment">Payment</div>
+          </div>
+
+          <div class="tab-content active" id="membershipTab">
+            <div class="form-group">
+              <label for="membershipType">Membership Type *</label>
+              <select id="membershipType" class="form-control" required>
+                <option value="">Select Type</option>
+                <option value="Monthly">Monthly (R300)</option>
+                <option value="Student Monthly">Student Monthly (R250)</option>
+                <option value="Day Pass">Day Pass (R50)</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="startDate">Start Date *</label>
+                <input
+                  type="date"
+                  id="startDate"
+                  class="form-control"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="endDate">End Date *</label>
+                <input type="date" id="endDate" class="form-control" required />
+              </div>
+            </div>
+          </div>
+
+          <div class="tab-content" id="paymentTab">
+            <div class="form-group">
+              <label for="paymentMethod">Payment Method *</label>
+              <select id="paymentMethod" class="form-control">
+                <option value="">Select Method</option>
+                <option value="Cash">Cash</option>
+                <option value="Card">Card</option>
+                <option value="EFT">EFT</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="paymentStatus">Payment Status *</label>
+              <select id="paymentStatus" class="form-control">
+                <option value="Paid">Paid</option>
+                <option value="Pending">Pending</option>
+                <option value="Failed">Failed</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="paymentDate">Payment Date *</label>
+              <input type="date" id="paymentDate" class="form-control" />
+            </div>
+          </div>
+
+          <button type="submit" class="btn">Register Member</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Member QR Code</h2>
+
+        <div class="qr-container">
+          <div id="qrcode"></div>
+        </div>
+
+        <div class="member-details" id="memberDetails">
+          <h3>Member Information</h3>
+          <div class="detail-item">
+            <span class="detail-label">Name:</span>
+            <span id="detailName">-</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Email:</span>
+            <span id="detailEmail">-</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Membership:</span>
+            <span id="detailMembership">-</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Status:</span>
+            <span id="detailStatus">-</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Valid Until:</span>
+            <span id="detailEndDate">-</span>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" id="printBtn">
+            <i class="fas fa-print"></i> Print QR Code
+          </button>
+          <button class="btn btn-success" id="newMemberBtn">
+            <i class="fas fa-user-plus"></i> New Member
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Initialize Supabase
+      const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+
+      const supabase = window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+      // Set default dates
+      document.addEventListener("DOMContentLoaded", function () {
+        // Set default start date to today
+        const today = new Date();
+        const startDateInput = document.getElementById("startDate");
+        startDateInput.valueAsDate = today;
+
+        // Set default end date to 30 days from today
+        const endDate = new Date();
+        endDate.setDate(today.getDate() + 30);
+        const endDateInput = document.getElementById("endDate");
+        endDateInput.valueAsDate = endDate;
+
+        // Set payment date to today
+        const paymentDateInput = document.getElementById("paymentDate");
+        paymentDateInput.valueAsDate = today;
+
+        // Check if user is logged in
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user || (user.role !== "staff" && user.role !== "admin")) {
+          window.location.href = "index.html";
+          return;
+        }
+
+        // Display user info
+        document.getElementById("userName").textContent =
+          user.email.split("@")[0];
+        document.getElementById("userAvatar").textContent = user.email
+          .charAt(0)
+          .toUpperCase();
+      });
+
+      // Tab navigation
+      document.querySelectorAll(".nav-tab").forEach((tab) => {
+        tab.addEventListener("click", function () {
+          // Remove active class from all tabs
+          document
+            .querySelectorAll(".nav-tab")
+            .forEach((t) => t.classList.remove("active"));
+          document
+            .querySelectorAll(".tab-content")
+            .forEach((c) => c.classList.remove("active"));
+
+          // Add active class to clicked tab
+          this.classList.add("active");
+          const tabId = this.getAttribute("data-tab") + "Tab";
+          document.getElementById(tabId).classList.add("active");
+        });
+      });
+
+      // Form submission handler
+      document
+        .getElementById("registrationForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          // Hide previous alerts
+          document.getElementById("errorAlert").style.display = "none";
+          document.getElementById("successAlert").style.display = "none";
+
+          // Get form values
+          const fname = document.getElementById("fname").value;
+          const lname = document.getElementById("lname").value;
+          const email = document.getElementById("email").value;
+          const uname = document.getElementById("uname").value;
+          const gender = document.getElementById("gender").value;
+          const password = document.getElementById("password").value;
+          const membershipType =
+            document.getElementById("membershipType").value;
+          const startDate = document.getElementById("startDate").value;
+          const endDate = document.getElementById("endDate").value;
+          const paymentMethod = document.getElementById("paymentMethod").value;
+          const paymentStatus = document.getElementById("paymentStatus").value;
+          const paymentDate = document.getElementById("paymentDate").value;
+
+          // Validate required fields
+          if (
+            !fname ||
+            !lname ||
+            !email ||
+            !uname ||
+            !password ||
+            !membershipType ||
+            !startDate ||
+            !endDate
+          ) {
+            showError("Please fill all required fields.");
+            return;
+          }
+
+          try {
+            // Generate a unique QR code
+            const qrCode =
+              "QR_" +
+              uname.toUpperCase() +
+              "_" +
+              Math.floor(1000 + Math.random() * 9000);
+
+            // Insert into Member table
+            const { data: memberData, error: memberError } = await supabase
+              .from("member")
+              .insert([
+                {
+                  fname: fname,
+                  lname: lname,
+                  email: email,
+                  uname: uname,
+                  gender: gender,
+                  password: password,
+                  qrcode: qrCode,
+                  status: "Active",
+                },
+              ])
+              .select();
+
+            if (memberError) {
+              console.error("Error inserting member:", memberError);
+              showError("Error saving member data: " + memberError.message);
+              return;
+            }
+
+            const memberId = memberData[0].memberid;
+
+            // Insert into Membership table
+            const { error: membershipError } = await supabase
+              .from("membership")
+              .insert([
+                {
+                  memberid: memberId,
+                  type: membershipType,
+                  status: paymentStatus === "Paid" ? "Paid" : "Unpaid",
+                  startdate: startDate,
+                  enddate: endDate,
+                },
+              ]);
+
+            if (membershipError) {
+              console.error("Error inserting membership:", membershipError);
+              showError(
+                "Error saving membership data: " + membershipError.message
+              );
+              return;
+            }
+
+            // Insert into Payment table if payment method is selected
+            if (paymentMethod && paymentDate) {
+              let amount = 300;
+              if (membershipType === "Student Monthly") amount = 250;
+              if (membershipType === "Day Pass") amount = 50;
+
+              const { error: paymentError } = await supabase
+                .from("payment")
+                .insert([
+                  {
+                    memberid: memberId,
+                    amount: amount,
+                    paymentdate: paymentDate,
+                    method: paymentMethod,
+                    status: paymentStatus,
+                    expirydate: endDate,
+                  },
+                ]);
+
+              if (paymentError) {
+                console.error("Error inserting payment:", paymentError);
+                showError("Error saving payment data: " + paymentError.message);
+                return;
+              }
+            }
+
+            // Generate QR code
+            generateQRCode(qrCode);
+
+            // Display member details
+            document.getElementById("detailName").textContent =
+              fname + " " + lname;
+            document.getElementById("detailEmail").textContent = email;
+            document.getElementById("detailMembership").textContent =
+              membershipType;
+            document.getElementById("detailStatus").textContent =
+              paymentStatus === "Paid" ? "Active" : "Pending Payment";
+            document.getElementById("detailEndDate").textContent = endDate;
+
+            // Show success message
+            showSuccess("Member registered successfully! QR code generated.");
+          } catch (error) {
+            console.error("Registration error:", error);
+            showError(
+              "An error occurred during registration. Please try again."
+            );
+          }
+        });
+
+      // Generate QR code
+      function generateQRCode(qrData) {
+        const qrContainer = document.getElementById("qrcode");
+        qrContainer.innerHTML = "";
+
+        QRCode.toCanvas(
+          qrContainer,
+          qrData,
+          {
+            width: 200,
+            margin: 1,
+            color: {
+              dark: "#2c3e50",
+              light: "#ffffff",
+            },
+          },
+          function (error) {
+            if (error) console.error("QR code generation error:", error);
+          }
+        );
+      }
+
+      // Print QR code
+      document
+        .getElementById("printBtn")
+        .addEventListener("click", function () {
+          const printContent = document.getElementById("qrcode").innerHTML;
+          const originalContent = document.body.innerHTML;
+
+          document.body.innerHTML = printContent;
+          window.print();
+          document.body.innerHTML = originalContent;
+          window.location.reload();
+        });
+
+      // New member button
+      document
+        .getElementById("newMemberBtn")
+        .addEventListener("click", function () {
+          document.getElementById("registrationForm").reset();
+
+          // Reset dates
+          const today = new Date();
+          const startDateInput = document.getElementById("startDate");
+          startDateInput.valueAsDate = today;
+
+          const endDate = new Date();
+          endDate.setDate(today.getDate() + 30);
+          const endDateInput = document.getElementById("endDate");
+          endDateInput.valueAsDate = endDate;
+
+          const paymentDateInput = document.getElementById("paymentDate");
+          paymentDateInput.valueAsDate = today;
+
+          // Clear QR code and details
+          document.getElementById("qrcode").innerHTML = "";
+          document.getElementById("detailName").textContent = "-";
+          document.getElementById("detailEmail").textContent = "-";
+          document.getElementById("detailMembership").textContent = "-";
+          document.getElementById("detailStatus").textContent = "-";
+          document.getElementById("detailEndDate").textContent = "-";
+
+          // Hide alerts
+          document.getElementById("errorAlert").style.display = "none";
+          document.getElementById("successAlert").style.display = "none";
+        });
+
+      // Helper functions to show alerts
+      function showError(message) {
+        const errorAlert = document.getElementById("errorAlert");
+        errorAlert.textContent = message;
+        errorAlert.style.display = "block";
+      }
+
+      function showSuccess(message) {
+        const successAlert = document.getElementById("successAlert");
+        successAlert.textContent = message;
+        successAlert.style.display = "block";
+      }
+
+      // Logout functionality
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.removeItem("user");
+        window.location.href = "index.html";
+      });
+    </script>
+  </body>
+</html>
