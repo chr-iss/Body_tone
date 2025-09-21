@@ -1,688 +1,723 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Body Tone Gym - Member Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
-        :root {
-            --primary: #2c3e50;
-            --secondary: #3498db;
-            --accent: #657680;
-            --light: #ecf0f1;
-            --dark: #2c3e50;
-            --success: #2ecc71;
-            --warning: #f39c12;
-            --error: #e74c3c;
-        }
+      :root {
+        --primary: #2c3e50;
+        --secondary: #3498db;
+        --accent: #657680;
+        --light: #ecf0f1;
+        --dark: #2c3e50;
+        --success: #2ecc71;
+        --warning: #f39c12;
+        --error: #e74c3c;
+      }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
 
-        body {
-            background-color: #f5f7fa;
-            color: #333;
-            line-height: 1.6;
-        }
+      body {
+        background-color: #f5f7fa;
+        color: #333;
+        line-height: 1.6;
+      }
 
-        .header {
-             background: linear-gradient(135deg, #572f32, #14191f);
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+      .header {
+        background: linear-gradient(135deg, #572f32, #14191f);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
 
-        .header h1 {
-            font-size: 20px;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-        }
-        
-        .user-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: var(--secondary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 10px;
-        }
-        
-        .logout-btn {
-            background: var( --secondary);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: 600;
-            margin-left: 15px;
-        }
+      .header h1 {
+        font-size: 20px;
+      }
 
+      .user-info {
+        display: flex;
+        align-items: center;
+      }
+
+      .user-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: var(--secondary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 10px;
+      }
+
+      .logout-btn {
+        background: var(--secondary);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-left: 15px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+
+      @media (max-width: 900px) {
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
+          grid-template-columns: 1fr;
         }
+      }
 
-        @media (max-width: 900px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
+      .card {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .card-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: var(--dark);
+        padding-bottom: 10px;
+        border-bottom: 2px solid #eee;
+      }
+
+      .profile-section {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+      }
+
+      .profile-img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: var(--secondary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        font-weight: bold;
+        margin-right: 20px;
+      }
+
+      .profile-info h2 {
+        margin-bottom: 5px;
+        color: var(--dark);
+      }
+
+      .profile-info p {
+        color: #666;
+      }
+
+      .detail-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+      }
+
+      .detail-item:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .detail-label {
+        font-weight: 600;
+        color: #666;
+      }
+
+      .status-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .status-active {
+        background: #e6f7ee;
+        color: var(--success);
+      }
+
+      .status-inactive {
+        background: #ffe6e6;
+        color: var(--error);
+      }
+
+      .status-pending {
+        background: #fef5e6;
+        color: var(--warning);
+      }
+
+      .qr-container {
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      #qrcode {
+        display: inline-block;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .btn:hover {
+        background: #2980b9;
+      }
+
+      .btn-success {
+        background: var(--success);
+      }
+
+      .btn-success:hover {
+        background: #27ae60;
+      }
+
+      .btn-warning {
+        background: var(--warning);
+      }
+
+      .btn-warning:hover {
+        background: #e67e22;
+      }
+
+      .payment-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+
+      .payment-table th,
+      .payment-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+      }
+
+      .payment-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: var(--dark);
+      }
+
+      .payment-table tr:hover {
+        background: #f8f9fa;
+      }
+
+      .payment-status-paid {
+        color: var(--success);
+        font-weight: 600;
+      }
+
+      .payment-status-pending {
+        color: var(--warning);
+        font-weight: 600;
+      }
+
+      .payment-status-failed {
+        color: var(--error);
+        font-weight: 600;
+      }
+
+      .no-payments {
+        text-align: center;
+        padding: 30px;
+        color: #999;
+        font-style: italic;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 30px;
+        color: #666;
+      }
+
+      .loading i {
+        display: block;
+        font-size: 30px;
+        margin-bottom: 10px;
+        color: var(--secondary);
+      }
+
+      .error-container {
+        text-align: center;
+        padding: 30px;
+        color: var(--error);
+      }
+
+      .error-container i {
+        font-size: 40px;
+        margin-bottom: 15px;
+      }
+
+      .error-container button {
+        margin-top: 15px;
+        padding: 10px 20px;
+        background: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      /* Placeholder styling */
+      .placeholder {
+        background: #f0f0f0;
+        border-radius: 4px;
+        animation: pulse 1.5s infinite;
+      }
+
+      .placeholder-text {
+        height: 16px;
+        margin-bottom: 8px;
+        width: 80%;
+      }
+
+      .placeholder-text.short {
+        width: 50%;
+      }
+
+      .placeholder-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+      }
+
+      @keyframes pulse {
+        0% {
+          opacity: 1;
         }
-
-        .card {
-            background: white;
-            border-radius: 8px;
-            padding: 25px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        50% {
+          opacity: 0.5;
         }
-
-        .card-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: var(--dark);
-            padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
+        100% {
+          opacity: 1;
         }
-
-        .profile-section {
-            display: flex;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .profile-img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: var(--secondary);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 30px;
-            font-weight: bold;
-            margin-right: 20px;
-        }
-
-        .profile-info h2 {
-            margin-bottom: 5px;
-            color: var(--dark);
-        }
-
-        .profile-info p {
-            color: #666;
-        }
-
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .detail-item:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        .detail-label {
-            font-weight: 600;
-            color: #666;
-        }
-
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .status-active {
-            background: #e6f7ee;
-            color: var(--success);
-        }
-
-        .status-inactive {
-            background: #ffe6e6;
-            color: var(--error);
-        }
-
-        .status-pending {
-            background: #fef5e6;
-            color: var(--warning);
-        }
-
-        .qr-container {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        #qrcode {
-            display: inline-block;
-            padding: 15px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-       
-
-        .btn:hover {
-            background: #2980b9;
-        }
-
-        .btn-success {
-            background: var(--success);
-        }
-
-        .btn-success:hover {
-            background: #27ae60;
-        }
-
-        .btn-warning {
-            background: var(--warning);
-        }
-
-        .btn-warning:hover {
-            background: #e67e22;
-        }
-
-        .payment-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        .payment-table th,
-        .payment-table td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        .payment-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        .payment-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .payment-status-paid {
-            color: var(--success);
-            font-weight: 600;
-        }
-
-        .payment-status-pending {
-            color: var(--warning);
-            font-weight: 600;
-        }
-
-        .payment-status-failed {
-            color: var(--error);
-            font-weight: 600;
-        }
-
-        .no-payments {
-            text-align: center;
-            padding: 30px;
-            color: #999;
-            font-style: italic;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 30px;
-            color: #666;
-        }
-
-        .loading i {
-            display: block;
-            font-size: 30px;
-            margin-bottom: 10px;
-            color: var(--secondary);
-        }
-
-        .error-container {
-            text-align: center;
-            padding: 30px;
-            color: var(--error);
-        }
-
-        .error-container i {
-            font-size: 40px;
-            margin-bottom: 15px;
-        }
-
-        .error-container button {
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        /* Placeholder styling */
-        .placeholder {
-            background: #f0f0f0;
-            border-radius: 4px;
-            animation: pulse 1.5s infinite;
-        }
-
-        .placeholder-text {
-            height: 16px;
-            margin-bottom: 8px;
-            width: 80%;
-        }
-
-        .placeholder-text.short {
-            width: 50%;
-        }
-
-        .placeholder-circle {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="header">
-        <h1>Body Tone Gym </h1>
-        <div class="user-info">
-            <div class="user-avatar" id="userAvatar"></div>
-            <span id="userName"></span>
-            <button class="logout-btn" id="logoutBtn">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
-        </div>
+      <h1>Body Tone Gym</h1>
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar"></div>
+        <span id="userName"></span>
+        <button class="logout-btn" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
     </div>
 
     <div class="container">
-        <div id="errorDisplay" class="error-container" style="display: none; grid-column: 1 / -1;">
-            <i class="fas fa-exclamation-circle"></i>
-            <h2>Authentication Error</h2>
-            <p>We couldn't retrieve your member information. Please log in again.</p>
-            <button id="loginRedirectBtn">Go to Login Page</button>
+      <div
+        id="errorDisplay"
+        class="error-container"
+        style="display: none; grid-column: 1 / -1"
+      >
+        <i class="fas fa-exclamation-circle"></i>
+        <h2>Authentication Error</h2>
+        <p>
+          We couldn't retrieve your member information. Please log in again.
+        </p>
+        <button id="loginRedirectBtn">Go to Login Page</button>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Member Profile</h2>
+
+        <div class="profile-section">
+          <div
+            class="profile-img placeholder placeholder-circle"
+            id="profileImg"
+          ></div>
+          <div class="profile-info">
+            <h2 class="placeholder placeholder-text" id="memberName"></h2>
+            <p class="placeholder placeholder-text short" id="memberEmail"></p>
+          </div>
         </div>
 
-        <div class="card">
-            <h2 class="card-title">Member Profile</h2>
-            
-            <div class="profile-section">
-                <div class="profile-img placeholder placeholder-circle" id="profileImg"></div>
-                <div class="profile-info">
-                    <h2 class="placeholder placeholder-text" id="memberName"></h2>
-                    <p class="placeholder placeholder-text short" id="memberEmail"></p>
-                </div>
-            </div>
-            
-            <div class="detail-item">
-                <span class="detail-label">Member ID:</span>
-                <span class="placeholder placeholder-text short" id="memberId"></span>
-            </div>
-            
-            <div class="detail-item">
-                <span class="detail-label">Username:</span>
-                <span class="placeholder placeholder-text short" id="memberUsername"></span>
-            </div>
-            
-            <div class="detail-item">
-                <span class="detail-label">Gender:</span>
-                <span class="placeholder placeholder-text short" id="memberGender"></span>
-            </div>
-            
-            
+        <div class="detail-item">
+          <span class="detail-label">Member ID:</span>
+          <span class="placeholder placeholder-text short" id="memberId"></span>
         </div>
-        
-        <div class="card">
-            <h2 class="card-title">Membership & QR Code</h2>
-            
-            <div class="detail-item">
-                <span class="detail-label">Membership Type:</span>
-                <span class="placeholder placeholder-text short" id="membershipType"></span>
-            </div>
-            
-            <div class="detail-item">
-                <span class="detail-label">Status:</span>
-                <span class="placeholder placeholder-text short" id="membershipStatus"></span>
-            </div>
-            
-            <div class="detail-item">
-                <span class="detail-label">Start Date:</span>
-                <span class="placeholder placeholder-text short" id="membershipStart"></span>
-            </div>
-            
-            <div class="detail-item">
-                <span class="detail-label">End Date:</span>
-                <span class="placeholder placeholder-text short" id="membershipEnd"></span>
-            </div>
-            
-            <div class="qr-container">
-                <div id="qrcode" class="placeholder" style="width: 180px; height: 180px;"></div>
-            </div>
-            
-            
+
+        <div class="detail-item">
+          <span class="detail-label">Username:</span>
+          <span
+            class="placeholder placeholder-text short"
+            id="memberUsername"
+          ></span>
         </div>
-        
-        <div class="card" style="grid-column: 1 / -1;">
-            <h2 class="card-title">Payment History</h2>
-            
-            <div id="paymentsLoading" class="loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                Loading payment history...
-            </div>
-            
-            <div id="paymentsContainer" style="display: none;">
-                <table class="payment-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Description</th>
-                            <th>Amount</th>
-                            <th>Method</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="paymentsTableBody">
-                        <!-- Payment data will be inserted here -->
-                    </tbody>
-                </table>
-                
-                <div id="noPayments" class="no-payments" style="display: none;">
-                    No payment history found.
-                </div>
-            </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Gender:</span>
+          <span
+            class="placeholder placeholder-text short"
+            id="memberGender"
+          ></span>
         </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card-title">Membership & QR Code</h2>
+
+        <div class="detail-item">
+          <span class="detail-label">Membership Type:</span>
+          <span
+            class="placeholder placeholder-text short"
+            id="membershipType"
+          ></span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Status:</span>
+          <span
+            class="placeholder placeholder-text short"
+            id="membershipStatus"
+          ></span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">Start Date:</span>
+          <span
+            class="placeholder placeholder-text short"
+            id="membershipStart"
+          ></span>
+        </div>
+
+        <div class="detail-item">
+          <span class="detail-label">End Date:</span>
+          <span
+            class="placeholder placeholder-text short"
+            id="membershipEnd"
+          ></span>
+        </div>
+
+        <div class="qr-container">
+          <div
+            id="qrcode"
+            class="placeholder"
+            style="width: 180px; height: 180px"
+          ></div>
+        </div>
+      </div>
+
+      <div class="card" style="grid-column: 1 / -1">
+        <h2 class="card-title">Payment History</h2>
+
+        <div id="paymentsLoading" class="loading">
+          <i class="fas fa-spinner fa-spin"></i>
+          Loading payment history...
+        </div>
+
+        <div id="paymentsContainer" style="display: none">
+          <table class="payment-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="paymentsTableBody">
+              <!-- Payment data will be inserted here -->
+            </tbody>
+          </table>
+
+          <div id="noPayments" class="no-payments" style="display: none">
+            No payment history found.
+          </div>
+        </div>
+      </div>
     </div>
 
-   <script>
-    // Initialize Supabase
-    const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+    <script>
+      // Initialize Supabase
+      const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
 
-    const supabase = window.supabase.createClient(
+      const supabase = window.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY
-    );
+      );
 
-    // Check if user is logged in
-    document.addEventListener("DOMContentLoaded", async function () {
+      // Check if user is logged in
+      document.addEventListener("DOMContentLoaded", async function () {
         try {
-            const memberData = JSON.parse(localStorage.getItem("member"));
-            console.log("Retrieved member data from localStorage:", memberData);
-            
-            if (!memberData || !memberData.memberid) {
-                showError("No valid member data found. Please log in again.");
-                return;
-            }
+          const memberData = JSON.parse(localStorage.getItem("member"));
+          console.log("Retrieved member data from localStorage:", memberData);
 
-            // Display user info
-            document.getElementById("userName").textContent = `${memberData.fname} ${memberData.lname}`;
-            document.getElementById("userAvatar").textContent = memberData.fname.charAt(0).toUpperCase();
+          if (!memberData || !memberData.memberid) {
+            showError("No valid member data found. Please log in again.");
+            return;
+          }
 
-            // Load member details
-            await loadMemberDetails(memberData.memberid);
-            
-            // Load membership details
-            await loadMembershipDetails(memberData.memberid);
-            
-            // Load payment history
-            await loadPaymentHistory(memberData.memberid);
+          // Display user info
+          document.getElementById(
+            "userName"
+          ).textContent = `${memberData.fname} ${memberData.lname}`;
+          document.getElementById("userAvatar").textContent = memberData.fname
+            .charAt(0)
+            .toUpperCase();
+
+          // Load member details
+          await loadMemberDetails(memberData.memberid);
+
+          // Load membership details
+          await loadMembershipDetails(memberData.memberid);
+
+          // Load payment history
+          await loadPaymentHistory(memberData.memberid);
         } catch (error) {
-            console.error("Error initializing dashboard:", error);
-            showError("Failed to initialize dashboard. Please log in again.");
+          console.error("Error initializing dashboard:", error);
+          showError("Failed to initialize dashboard. Please log in again.");
         }
-    });
+      });
 
-    // Show error message
-    function showError(message) {
+      // Show error message
+      function showError(message) {
         document.getElementById("errorDisplay").style.display = "block";
         document.querySelector("#errorDisplay p").textContent = message;
-        
-        // Hide all content cards
-        document.querySelectorAll(".card").forEach(card => {
-            card.style.display = "none";
-        });
-    }
 
-    // Remove placeholder classes and set actual content
-    function removePlaceholder(elementId, content) {
+        // Hide all content cards
+        document.querySelectorAll(".card").forEach((card) => {
+          card.style.display = "none";
+        });
+      }
+
+      // Remove placeholder classes and set actual content
+      function removePlaceholder(elementId, content) {
         const element = document.getElementById(elementId);
         if (element && content !== undefined && content !== null) {
-            element.textContent = content;
-            element.classList.remove("placeholder", "placeholder-text", "placeholder-circle", "short");
+          element.textContent = content;
+          element.classList.remove(
+            "placeholder",
+            "placeholder-text",
+            "placeholder-circle",
+            "short"
+          );
         }
-    }
+      }
 
-    // Load member details
-    async function loadMemberDetails(memberid) {
+      // Load member details
+      async function loadMemberDetails(memberid) {
         try {
-            if (!memberid || isNaN(memberid)) {
-                throw new Error("Invalid member ID: " + memberid);
-            }
+          if (!memberid || isNaN(memberid)) {
+            throw new Error("Invalid member ID: " + memberid);
+          }
 
-            const { data: member, error } = await supabase
-                .from("member")
-                .select("*")
-                .eq("memberid", memberid)
-                .single();
+          const { data: member, error } = await supabase
+            .from("member")
+            .select("*")
+            .eq("memberid", memberid)
+            .single();
 
-            if (error) throw error;
+          if (error) throw error;
 
-            if (!member) {
-                throw new Error("No member found with ID: " + memberid);
-            }
+          if (!member) {
+            throw new Error("No member found with ID: " + memberid);
+          }
 
-            // Update UI with member details
-            removePlaceholder("memberName", `${member.fname} ${member.lname}`);
-            removePlaceholder("memberEmail", member.email);
-            removePlaceholder("memberId", member.memberid);
-            removePlaceholder("memberUsername", member.uname);
-            removePlaceholder("memberGender", member.gender || "Not specified");
-            
-            // Set profile image with initials
-            const profileImg = document.getElementById("profileImg");
-            profileImg.textContent = `${member.fname.charAt(0)}${member.lname.charAt(0)}`.toUpperCase();
-            profileImg.classList.remove("placeholder", "placeholder-circle");
-            profileImg.style.background = "#3498db";
-            profileImg.style.color = "white";
-            
-            // Generate QR code
-            generateQRCode(`member_${member.memberid}_${member.uname.toUpperCase()}`);
-            
+          // Update UI with member details
+          removePlaceholder("memberName", `${member.fname} ${member.lname}`);
+          removePlaceholder("memberEmail", member.email);
+          removePlaceholder("memberId", member.memberid);
+          removePlaceholder("memberUsername", member.uname);
+          removePlaceholder("memberGender", member.gender || "Not specified");
+
+          // Set profile image with initials
+          const profileImg = document.getElementById("profileImg");
+          profileImg.textContent = `${member.fname.charAt(
+            0
+          )}${member.lname.charAt(0)}`.toUpperCase();
+          profileImg.classList.remove("placeholder", "placeholder-circle");
+          profileImg.style.background = "#3498db";
+          profileImg.style.color = "white";
+
+          // Generate QR code
+          generateQRCode(
+            `member_${member.memberid}_${member.uname.toUpperCase()}`
+          );
         } catch (error) {
-            console.error("Error loading member details:", error);
-            showError("Error loading member details: " + error.message);
+          console.error("Error loading member details:", error);
+          showError("Error loading member details: " + error.message);
         }
-    }
+      }
 
-    // Load membership details
-    async function loadMembershipDetails(memberid) {
+      // Load membership details
+      async function loadMembershipDetails(memberid) {
         try {
-            const { data: memberships, error } = await supabase
-                .from("membership")
-                .select("*")
-                .eq("memberid", memberid)
-                .order("startdate", { ascending: false })
-                .limit(1);
+          const { data: memberships, error } = await supabase
+            .from("membership")
+            .select("*")
+            .eq("memberid", memberid)
+            .order("startdate", { ascending: false })
+            .limit(1);
 
-            if (error) throw error;
+          if (error) throw error;
 
-            if (memberships && memberships.length > 0) {
-                const membership = memberships[0];
-                
-                removePlaceholder("membershipType", membership.type);
-                removePlaceholder("membershipStart", formatDate(membership.startdate));
-                removePlaceholder("membershipEnd", formatDate(membership.enddate));
-                
-                const statusElement = document.getElementById("membershipStatus");
-                removePlaceholder("membershipStatus", membership.status);
-                
-                statusElement.classList.remove("status-active", "status-inactive", "status-pending");
-                if (membership.status === "active") {
-                    statusElement.classList.add("status-active");
-                } else if (membership.status === "expired") {
-                    statusElement.classList.add("status-inactive");
-                } else {
-                    statusElement.classList.add("status-pending");
-                }
+          if (memberships && memberships.length > 0) {
+            const membership = memberships[0];
+
+            removePlaceholder("membershipType", membership.type);
+            removePlaceholder(
+              "membershipStart",
+              formatDate(membership.startdate)
+            );
+            removePlaceholder("membershipEnd", formatDate(membership.enddate));
+
+            const statusElement = document.getElementById("membershipStatus");
+            removePlaceholder("membershipStatus", membership.status);
+
+            statusElement.classList.remove(
+              "status-active",
+              "status-inactive",
+              "status-pending"
+            );
+            if (membership.status === "active") {
+              statusElement.classList.add("status-active");
+            } else if (membership.status === "expired") {
+              statusElement.classList.add("status-inactive");
             } else {
-                removePlaceholder("membershipType", "No membership");
-                removePlaceholder("membershipStatus", "inactive");
-                removePlaceholder("membershipStart", "N/A");
-                removePlaceholder("membershipEnd", "N/A");
-                
-                const statusElement = document.getElementById("membershipStatus");
-                statusElement.classList.add("status-inactive");
+              statusElement.classList.add("status-pending");
             }
-            
+          } else {
+            removePlaceholder("membershipType", "No membership");
+            removePlaceholder("membershipStatus", "inactive");
+            removePlaceholder("membershipStart", "N/A");
+            removePlaceholder("membershipEnd", "N/A");
+
+            const statusElement = document.getElementById("membershipStatus");
+            statusElement.classList.add("status-inactive");
+          }
         } catch (error) {
-            console.error("Error loading membership details:", error);
+          console.error("Error loading membership details:", error);
         }
-    }
+      }
 
-    // Load payment history
-    async function loadPaymentHistory(memberid) {
+      // Load payment history
+      async function loadPaymentHistory(memberId) {
         try {
-            const { data: payments, error } = await supabase
-    .from("payment")
-    .select("*")
-    .eq("memberid", memberId)
-    .order("paymentdate", { ascending: false }); // <-- use correct column name here
+          const { data: payments, error } = await supabase
+            .from("payment")
+            .select("*")
+            .eq("memberid", memberId)
+            .order("paymentdate", { ascending: false }); // <-- use correct column name here
 
+          if (error) throw error;
 
-            if (error) throw error;
+          document.getElementById("paymentsLoading").style.display = "none";
+          document.getElementById("paymentsContainer").style.display = "block";
 
-            document.getElementById("paymentsLoading").style.display = "none";
-            document.getElementById("paymentsContainer").style.display = "block";
-            
-            if (payments && payments.length > 0) {
-                const tableBody = document.getElementById("paymentsTableBody");
-                tableBody.innerHTML = "";
-                
-                payments.forEach(payment => {
-                    const row = document.createElement("tr");
-                    
-                    row.innerHTML = `
+          if (payments && payments.length > 0) {
+            const tableBody = document.getElementById("paymentsTableBody");
+            tableBody.innerHTML = "";
+
+            payments.forEach((payment) => {
+              const row = document.createElement("tr");
+
+              row.innerHTML = `
                         <td>${formatDate(payment.date)}</td>
                         <td>Membership Payment</td>
                         <td>R${payment.amount.toFixed(2)}</td>
                         <td>${payment.method || "N/A"}</td>
-                        <td class="payment-status-${payment.status.toLowerCase()}">${payment.status}</td>
+                        <td class="payment-status-${payment.status.toLowerCase()}">${
+                payment.status
+              }</td>
                     `;
-                    
-                    tableBody.appendChild(row);
-                });
-            } else {
-                document.getElementById("noPayments").style.display = "block";
-            }
-            
-        } catch (error) {
-            console.error("Error loading payment history:", error);
-            document.getElementById("paymentsLoading").style.display = "none";
-            document.getElementById("paymentsContainer").style.display = "block";
+
+              tableBody.appendChild(row);
+            });
+          } else {
             document.getElementById("noPayments").style.display = "block";
+          }
+        } catch (error) {
+          console.error("Error loading payment history:", error);
+          document.getElementById("paymentsLoading").style.display = "none";
+          document.getElementById("paymentsContainer").style.display = "block";
+          document.getElementById("noPayments").style.display = "block";
         }
-    }
+      }
 
-    //// Generate QR code
-function generateQRCode(qrData) {
-    const qrContainer = document.getElementById("qrcode");
-    qrContainer.innerHTML = ""; // clear previous QR
+      //// Generate QR code
+      function generateQRCode(qrData) {
+        const qrContainer = document.getElementById("qrcode");
+        qrContainer.innerHTML = ""; // clear previous QR
 
-    // Create canvas
-    const canvas = document.createElement("canvas");
-    qrContainer.appendChild(canvas);
+        // Create canvas
+        const canvas = document.createElement("canvas");
+        qrContainer.appendChild(canvas);
 
-    QRCode.toCanvas(
-        canvas, // <- pass the canvas instead of the div
-        qrData,
-        {
+        QRCode.toCanvas(
+          canvas, // <- pass the canvas instead of the div
+          qrData,
+          {
             width: 180,
             margin: 1,
             color: {
-                dark: "#2c3e50",
-                light: "#ffffff",
+              dark: "#2c3e50",
+              light: "#ffffff",
             },
-        },
-        function (error) {
+          },
+          function (error) {
             if (error) console.error("QR code generation error:", error);
-        }
-    );
-}
-    // Format date
-    function formatDate(dateString) {
+          }
+        );
+      }
+      // Format date
+      function formatDate(dateString) {
         if (!dateString) return "N/A";
-        
-        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+
+        const options = { year: "numeric", month: "short", day: "numeric" };
         return new Date(dateString).toLocaleDateString(undefined, options);
-    }
+      }
 
-    // Print QR code
-    document.getElementById("printBtn").addEventListener("click", function () {
-        const printContent = document.getElementById("qrcode").innerHTML;
-        const originalContent = document.body.innerHTML;
-
-        document.body.innerHTML = printContent;
-        window.print();
-        document.body.innerHTML = originalContent;
-        window.location.reload();
-    });
-
-    
-
-    // Logout functionality
-    document.getElementById("logoutBtn").addEventListener("click", () => {
+      // Logout functionality
+      document.getElementById("logoutBtn").addEventListener("click", () => {
         localStorage.removeItem("user");
-        window.location.href = "admin-login.html";
-      });
-
-    // Login redirect
-    document.getElementById("loginRedirectBtn").addEventListener("click", () => {
         window.location.href = "member-login.html";
-    });
-</script>
-</body>
+      });
+    </script>
+  </body>
 </html>
