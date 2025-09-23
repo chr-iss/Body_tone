@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Body Tone Gym - Check In/Out</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --error: #e74c3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 20px;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--secondary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .logout-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-left: 15px;
+        }
+
+        .back-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 15px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .page-subtitle {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--dark);
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-title i {
+            margin-right: 10px;
+            color: var(--secondary);
+        }
+
+        .checkin-section {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .status-indicator {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            font-size: 40px;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .status-checked-in {
+            background: var(--success);
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
+        }
+
+        .status-checked-out {
+            background: #95a5a6;
+            box-shadow: 0 0 20px rgba(149, 165, 166, 0.4);
+        }
+
+        .status-message {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .status-time {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 200px;
+        }
+
+        .btn i {
+            margin-right: 10px;
+        }
+
+        .btn-checkin {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-checkin:hover {
+            background: #27ae60;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .btn-checkout {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-checkout:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(192, 57, 43, 0.3);
+        }
+
+        .btn-disabled {
+            background: #bdc3c7;
+            color: #7f8c8d;
+            cursor: not-allowed;
+        }
+
+        .attendance-history {
+            margin-top: 30px;
+        }
+
+        .history-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .history-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .history-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .duration {
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .no-history {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: var(--success);
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #ffebee;
+            color: var(--error);
+            border: 1px solid #ef9a9a;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #666;
+        }
+
+        .loading i {
+            display: block;
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+
+        .qr-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .qr-instructions {
+            margin-bottom: 15px;
+            color: #7f8c8d;
+        }
+
+        .qr-container {
+            display: inline-block;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .btn {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            
+            .status-indicator {
+                width: 100px;
+                height: 100px;
+                font-size: 30px;
+            }
+            
+            .history-table {
+                font-size: 14px;
+            }
+            
+            .history-table th,
+            .history-table td {
+                padding: 8px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <button class="back-btn" id="backBtn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </button>
+        </div>
+        <h1>Body Tone Gym - Check In/Out</h1>
+        <div class="user-info">
+            <div class="user-avatar" id="userAvatar"></div>
+            <span id="userName"></span>
+            <button class="logout-btn" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">Gym Check-In System</h1>
+        <p class="page-subtitle">Check in when you arrive and check out when you leave to track your gym visits</p>
+        
+        <div id="successAlert" class="alert alert-success"></div>
+        <div id="errorAlert" class="alert alert-error"></div>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-door-open"></i> Current Status</h2>
+            
+            <div class="checkin-section">
+                <div class="status-indicator" id="statusIndicator">
+                    <i class="fas fa-user"></i>
+                </div>
+                
+                <div class="status-message" id="statusMessage">Checking status...</div>
+                <div class="status-time" id="statusTime"></div>
+                
+                <button class="btn btn-checkin" id="checkinBtn" style="display: none;">
+                    <i class="fas fa-sign-in-alt"></i> Check In
+                </button>
+                
+                <button class="btn btn-checkout" id="checkoutBtn" style="display: none;">
+                    <i class="fas fa-sign-out-alt"></i> Check Out
+                </button>
+                
+                <button class="btn btn-disabled" id="disabledBtn" style="display: none;" disabled>
+                    <i class="fas fa-spinner fa-spin"></i> Processing...
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-history"></i> Recent Attendance</h2>
+            
+            <div id="historyLoading" class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading attendance history...
+            </div>
+            
+            <div id="historyContainer" style="display: none;">
+                <div class="attendance-history">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Check-In Time</th>
+                                <th>Check-Out Time</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- Attendance history will be inserted here -->
+                        </tbody>
+                    </table>
+                    
+                    <div id="noHistory" class="no-history" style="display: none;">
+                        <i class="fas fa-history" style="font-size: 50px; margin-bottom: 15px;"></i>
+                        <h3>No attendance records found</h3>
+                        <p>Your gym visits will appear here after you check in.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 class="card-title"><i class="fas fa-qrcode"></i> Quick Check-In</h2>
+            
+            <div class="qr-section">
+                <p class="qr-instructions">Show this QR code at the front desk for quick check-in</p>
+                    <div id="qrCode"></div>
+
+                    
+                        <div class="qr-container">
+                        <div
+                            id="qrcode"
+                            class="placeholder"
+                            style="width: 180px; height: 180px"
+                        ></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+
+        const supabase = window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_ANON_KEY
+        );
+
+        // Global variables
+        let currentMember = null;
+        let currentAttendance = null;
+        let attendanceHistory = [];
+
+        // Check if user is logged in
+        document.addEventListener("DOMContentLoaded", async function () {
+            try {
+                const memberData = JSON.parse(localStorage.getItem("member"));
+                console.log("Retrieved member data from localStorage:", memberData);
+                
+                if (!memberData || !memberData.memberid) {
+                    window.location.href = "member-login.html";
+                    return;
+                }
+
+                currentMember = memberData;
+
+                // Display user info
+                document.getElementById("userName").textContent = `${memberData.fname} ${memberData.lname}`;
+                document.getElementById("userAvatar").textContent = memberData.fname.charAt(0).toUpperCase();
+
+                // Generate QR code for member
+                generateQRCode(`GYM_CHECKIN_${memberData.memberid}`);
+
+                // Check current attendance status
+                await checkCurrentAttendance();
+                
+                // Load attendance history
+                await loadAttendanceHistory();
+                
+            } catch (error) {
+                console.error("Error initializing check-in page:", error);
+                showError("Failed to initialize check-in system. Please try again.");
+            }
+        });
+
+        // Check if member is currently checked in
+        async function checkCurrentAttendance() {
+            try {
+                // Find the most recent attendance record without a checkout time
+                const { data: attendance, error } = await supabase
+                    .from("attendance")
+                    .select("*")
+                    .eq("memberid", currentMember.memberid)
+                    .is("checkouttime", null)
+                    .order("checkintime", { ascending: false })
+                    .limit(1);
+
+                if (error) throw error;
+
+                if (attendance && attendance.length > 0) {
+                    // Member is currently checked in
+                    currentAttendance = attendance[0];
+                    updateUIForCheckedIn();
+                } else {
+                    // Member is not checked in
+                    currentAttendance = null;
+                    updateUIForCheckedOut();
+                }
+                
+            } catch (error) {
+                console.error("Error checking attendance status:", error);
+                // Default to checked out state if there's an error
+                currentAttendance = null;
+                updateUIForCheckedOut();
+            }
+        }
+
+        // Update UI when member is checked in
+        function updateUIForCheckedIn() {
+            const checkinTime = new Date(currentAttendance.checkintime);
+            const formattedTime = checkinTime.toLocaleString();
+            
+            document.getElementById("statusIndicator").className = "status-indicator status-checked-in";
+            document.getElementById("statusIndicator").innerHTML = '<i class="fas fa-user-check"></i>';
+            document.getElementById("statusMessage").textContent = "You are checked in";
+            document.getElementById("statusTime").textContent = `Since ${formattedTime}`;
+            
+            document.getElementById("checkinBtn").style.display = "none";
+            document.getElementById("checkoutBtn").style.display = "inline-flex";
+            document.getElementById("disabledBtn").style.display = "none";
+        }
+
+        // Update UI when member is checked out
+        function updateUIForCheckedOut() {
+            document.getElementById("statusIndicator").className = "status-indicator status-checked-out";
+            document.getElementById("statusIndicator").innerHTML = '<i class="fas fa-user"></i>';
+            document.getElementById("statusMessage").textContent = "You are checked out";
+            document.getElementById("statusTime").textContent = "Ready for your next workout!";
+            
+            document.getElementById("checkinBtn").style.display = "inline-flex";
+            document.getElementById("checkoutBtn").style.display = "none";
+            document.getElementById("disabledBtn").style.display = "none";
+        }
+
+        // Show loading state on buttons
+        function setLoading(buttonType) {
+            document.getElementById("checkinBtn").style.display = "none";
+            document.getElementById("checkoutBtn").style.display = "none";
+            document.getElementById("disabledBtn").style.display = "inline-flex";
+        }
+
+        // Check in function
+        async function checkIn() {
+            setLoading("checkin");
+            
+            try {
+                const { data, error } = await supabase
+                    .from("attendance")
+                    .insert([
+                        {
+                            memberid: currentMember.memberid,
+                            checkintime: new Date().toISOString(),
+                            isoffline: false,
+                            synced: true
+                        }
+                    ])
+                    .select();
+
+                if (error) throw error;
+
+                // Update current attendance
+                currentAttendance = data[0];
+                
+                // Update UI
+                updateUIForCheckedIn();
+                
+                // Reload attendance history
+                await loadAttendanceHistory();
+                
+                // Show success message
+                showSuccess("Successfully checked in! Enjoy your workout.");
+                
+            } catch (error) {
+                console.error("Error checking in:", error);
+                showError("Failed to check in. Please try again.");
+                updateUIForCheckedOut();
+            }
+        }
+
+        // Check out function
+        async function checkOut() {
+            setLoading("checkout");
+            
+            try {
+                const { data, error } = await supabase
+                    .from("attendance")
+                    .update({ checkouttime: new Date().toISOString() })
+                    .eq("attendanceid", currentAttendance.attendanceid)
+                    .select();
+
+                if (error) throw error;
+
+                // Update current attendance
+                currentAttendance = null;
+                
+                // Update UI
+                updateUIForCheckedOut();
+                
+                // Reload attendance history
+                await loadAttendanceHistory();
+                
+                // Show success message
+                showSuccess("Successfully checked out! See you next time.");
+                
+            } catch (error) {
+                console.error("Error checking out:", error);
+                showError("Failed to check out. Please try again.");
+                updateUIForCheckedIn();
+            }
+        }
+
+        // Load attendance history
+        async function loadAttendanceHistory() {
+            try {
+                const { data: history, error } = await supabase
+                    .from("attendance")
+                    .select("*")
+                    .eq("memberid", currentMember.memberid)
+                    .order("checkintime", { ascending: false })
+                    .limit(10);
+
+                if (error) throw error;
+
+                attendanceHistory = history || [];
+                
+                // Hide loading indicator
+                document.getElementById("historyLoading").style.display = "none";
+                document.getElementById("historyContainer").style.display = "block";
+                
+                if (attendanceHistory.length > 0) {
+                    displayAttendanceHistory(attendanceHistory);
+                } else {
+                    document.getElementById("noHistory").style.display = "block";
+                }
+                
+            } catch (error) {
+                console.error("Error loading attendance history:", error);
+                document.getElementById("historyLoading").style.display = "none";
+                document.getElementById("historyContainer").style.display = "block";
+                document.getElementById("noHistory").style.display = "block";
+            }
+        }
+
+        // Display attendance history in table
+        function displayAttendanceHistory(history) {
+            const tableBody = document.getElementById("historyTableBody");
+            tableBody.innerHTML = "";
+            
+            history.forEach(record => {
+                const row = document.createElement("tr");
+                
+                const checkinTime = new Date(record.checkintime);
+                const checkoutTime = record.checkouttime ? new Date(record.checkouttime) : null;
+                
+                const date = checkinTime.toLocaleDateString();
+                const checkin = checkinTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const checkout = checkoutTime ? checkoutTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-";
+                
+                // Calculate duration
+                let duration = "-";
+                if (checkoutTime) {
+                    const diffMs = checkoutTime - checkinTime;
+                    const diffMins = Math.floor(diffMs / 60000);
+                    const hours = Math.floor(diffMins / 60);
+                    const minutes = diffMins % 60;
+                    
+                    if (hours > 0) {
+                        duration = `${hours}h ${minutes}m`;
+                    } else {
+                        duration = `${minutes}m`;
+                    }
+                }
+                
+                // Determine status
+                const status = checkoutTime ? "Completed" : "In Progress";
+                const statusClass = checkoutTime ? "status-completed" : "status-inprogress";
+                
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td>${checkin}</td>
+                    <td>${checkout}</td>
+                    <td class="duration">${duration}</td>
+                    <td><span class="${statusClass}">${status}</span></td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+     //// Generate QR code
+      function generateQRCode(qrData) {
+        const qrContainer = document.getElementById("qrcode");
+        qrContainer.innerHTML = ""; // clear previous QR
+
+        // Create canvas
+        const canvas = document.createElement("canvas");
+        qrContainer.appendChild(canvas);
+
+        QRCode.toCanvas(
+          canvas, // <- pass the canvas instead of the div
+          qrData,
+          {
+            width: 180,
+            margin: 1,
+            color: {
+              dark: "#2c3e50",
+              light: "#ffffff",
+            },
+          },
+          function (error) {
+            if (error) console.error("QR code generation error:", error);
+          }
+        );
+      }
+        
+
+        // Show success message
+        function showSuccess(message) {
+            const successAlert = document.getElementById("successAlert");
+            successAlert.textContent = message;
+            successAlert.style.display = "block";
+            document.getElementById("errorAlert").style.display = "none";
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                successAlert.style.display = "none";
+            }, 5000);
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorAlert = document.getElementById("errorAlert");
+            errorAlert.textContent = message;
+            errorAlert.style.display = "block";
+            document.getElementById("successAlert").style.display = "none";
+        }
+
+        // Event listeners
+        document.getElementById("checkinBtn").addEventListener("click", checkIn);
+        document.getElementById("checkoutBtn").addEventListener("click", checkOut);
+
+        // Back to dashboard
+        document.getElementById("backBtn").addEventListener("click", function() {
+            window.location.href = "member-dasbord.html";
+        });
+
+        // Logout functionality
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            localStorage.removeItem("member");
+            localStorage.removeItem("isAuthenticated");
+            window.location.href = "member-login.html";
+        });
+    </script>
+</body>
+</html>
