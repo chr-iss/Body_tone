@@ -21,10 +21,6 @@ Live Demo:https:https://chr-iss.github.io/Body_tone/
   Staff can manually mark a member as "paid" (cash/EFT).  
   Automatic blocking occurs if payments are overdue by **7+ days**.
 
-- **Offline Mode**  
-  Check-ins are stored locally if internet is down and sync automatically once it’s restored.
-
-
 
 ## 🛠️ Tech & Tools
 
