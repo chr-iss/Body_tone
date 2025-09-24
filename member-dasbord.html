@@ -34,6 +34,12 @@
         color: #333;
         line-height: 1.6;
       }
+              
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
 
       .header {
         background: linear-gradient(135deg, #572f32, #14191f);
@@ -77,6 +83,17 @@
         font-weight: 600;
         margin-left: 15px;
       }
+      .checkin-Btn {
+        background: var(--secondary);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-left: 15px;
+      }
+
 
       .container {
         max-width: 1200px;
@@ -362,7 +379,8 @@
 
       <div class="card">
         <h2 class="card-title">Member Profile</h2>
-
+       
+   
         <div class="profile-section">
           <div
             class="profile-img placeholder placeholder-circle"
@@ -397,49 +415,37 @@
       </div>
 
       <div class="card">
-        <h2 class="card-title">Membership & QR Code</h2>
+  <div class="card-header">
+    <h2 class="card-title">Membership & QR Code</h2>
+    <button class="checkin-Btn" id="CheckinBtn">
+      <i class="fas fa-sign-in-alt"></i> Checkin
+    </button>
+  </div>
 
-        <div class="detail-item">
-          <span class="detail-label">Membership Type:</span>
-          <span
-            class="placeholder placeholder-text short"
-            id="membershipType"
-          ></span>
-        </div>
+  <div class="detail-item">
+    <span class="detail-label">Membership Type:</span>
+    <span class="placeholder placeholder-text short" id="membershipType"></span>
+  </div>
 
-        <div class="detail-item">
-          <span class="detail-label">Status:</span>
-          <span
-            class="placeholder placeholder-text short"
-            id="membershipStatus"
-          ></span>
-        </div>
+  <div class="detail-item">
+    <span class="detail-label">Status:</span>
+    <span class="placeholder placeholder-text short" id="membershipStatus"></span>
+  </div>
 
-        <div class="detail-item">
-          <span class="detail-label">Start Date:</span>
-          <span
-            class="placeholder placeholder-text short"
-            id="membershipStart"
-          ></span>
-        </div>
+  <div class="detail-item">
+    <span class="detail-label">Start Date:</span>
+    <span class="placeholder placeholder-text short" id="membershipStart"></span>
+  </div>
 
-        <div class="detail-item">
-          <span class="detail-label">End Date:</span>
-          <span
-            class="placeholder placeholder-text short"
-            id="membershipEnd"
-          ></span>
-        </div>
+  <div class="detail-item">
+    <span class="detail-label">End Date:</span>
+    <span class="placeholder placeholder-text short" id="membershipEnd"></span>
+  </div>
 
-        <div class="qr-container">
-          <div
-            id="qrcode"
-            class="placeholder"
-            style="width: 180px; height: 180px"
-          ></div>
-        </div>
-      </div>
-
+  <div class="qr-container">
+    <div id="qrcode" class="placeholder" style="width: 180px; height: 180px"></div>
+  </div>
+</div>
       <div class="card" style="grid-column: 1 / -1">
         <h2 class="card-title">Payment History</h2>
 
@@ -717,7 +723,13 @@
       document.getElementById("logoutBtn").addEventListener("click", () => {
         localStorage.removeItem("user");
         window.location.href = "member-login.html";
-      });
+        
+    
+  })  
+    document.getElementById("CheckinBtn").addEventListener("click", () => {
+    window.location.href = "booking.html";
+        });
+
     </script>
   </body>
 </html>
