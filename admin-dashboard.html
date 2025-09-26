@@ -79,6 +79,19 @@
         margin-left: 15px;
       }
 
+      .nav-btn {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-left: 15px;
+        text-decoration: none;
+        display: inline-block;
+      }
+
       .container {
         max-width: 1200px;
         margin: 0 auto;
@@ -273,11 +286,16 @@
   </head>
   <body>
     <div class="header">
-      <h1>Body Tone Gym - Member Registration</h1>
+      <h1> Member Registration</h1>
       <div class="user-info">
         <div class="user-avatar" id="userAvatar">S</div>
         <span id="userName">Staff User</span>
-        <a class="logout-btn" href="admin-scanner.html">Scanner</a>
+        <a class="nav-btn" href="admin-scanner.html">
+          <i class="fas fa-qrcode"></i> Scanner
+        </a>
+        <a class="nav-btn" href="admin-booking.html">
+          <i class="fas fa-calendar-alt"></i> Bookings
+        </a>
         <button class="logout-btn" id="logoutBtn">
           <i class="fas fa-sign-out-alt"></i> Logout
         </button>

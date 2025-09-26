@@ -157,37 +157,62 @@
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
       const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      function showError(msg){ document.getElementById("errorAlert").textContent = msg; document.getElementById("errorAlert").style.display="block"; document.getElementById("successAlert").style.display="none"; }
-      function showSuccess(msg){ document.getElementById("successAlert").textContent = msg; document.getElementById("successAlert").style.display="block"; document.getElementById("errorAlert").style.display="none"; }
+   function showError(msg){
+  document.getElementById("errorAlert").textContent = msg;
+  document.getElementById("errorAlert").style.display = "block";
+  document.getElementById("successAlert").style.display = "none";
+}
+function showSuccess(msg){
+  document.getElementById("successAlert").textContent = msg;
+  document.getElementById("successAlert").style.display = "block";
+  document.getElementById("errorAlert").style.display = "none";
+}
 
-      document.getElementById("loginForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const uname = document.getElementById("username").value.trim();
-        const password = document.getElementById("password").value.trim();
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-        if(!uname || !password){ showError("Please enter username and password."); return; }
+    const uname = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-        try {
-          const { data: members, error } = await supabase
-            .from("member")
-            .select("*")
-            .eq("uname", uname)
-            .eq("password", password)
-            .limit(1);
+    if (!uname || !password) {
+      showError("Please enter username and password.");
+      return;
+    }
 
-           
+    try {
+      const { data: members, error } = await supabase
+        .from("member")   // ✅ Make sure your table name is correct
+        .select("*")
+        .eq("uname", uname)
+        .eq("password", password)
+        .limit(1);
 
+      if (error) {
+        showError("Login failed: " + error.message);
+        return;
+      }
+      if (!members || members.length === 0) {
+        showError("Invalid username or password.");
+        return;
+      }
 
-          if(error){ showError("Login failed: " + error.message); return; }
-          if(!members || members.length === 0){ showError("Invalid username or password."); return; }
+      const member = members[0];
 
-          const member = members[0];
-          localStorage.setItem("member", JSON.stringify(member));
-          showSuccess("Login successful! Redirecting...");
+      // Save memberId so dashboard & booking pages can use it
+      localStorage.setItem("memberId", member.memberid);
 
-          setTimeout(()=>{ window.location.href = "booking.html"; }, 1500);
-        } catch(err){ showError("Unexpected error: " + err.message); }
-      });
+      showSuccess("Login successful! Redirecting to dashboard...");
+      setTimeout(() => {
+        window.location.href = "member-dasbord.html";  // ✅ redirect to dashboard
+      }, 1000);
+
+    } catch (err) {
+      showError("Unexpected error: " + err.message);
+    }
+  });
+});
+
     </script>
   </body>
 </html>

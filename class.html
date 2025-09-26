@@ -1,1254 +1,501 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Body Tone Gym - Book a Class</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Member Bookings</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet"/>
   <style>
-    :root {
-      --primary: #2c3e50;
-      --secondary: #3498db;
-      --accent: #e74c3c;
-      --success: #2ecc71;
-      --warning: #f39c12;
-      --error: #e74c3c;
-      --light: #ecf0f1;
-      --dark: #2c3e50;
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .avatar { background: #007bff; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background: #f0f0f0; }
+    .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8em; }
+    .status-available { background: #d4edda; color: #155724; }
+    .status-waitlist { background: #fff3cd; color: #856404; }
+    .status-full { background: #f8d7da; color: #721c24; }
+    .status-booked { background: #007bff; color: white; }
+    .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; margin: 2px; font-size: 0.9em; }
+    .btn-book { background: #28a745; color: white; }
+    .btn-details { background: #17a2b8; color: white; }
+    .btn-cancel { background: #dc3545; color: white; }
+    .btn-booked { background: gray; color: white; }
+    .alert { padding: 10px; margin-bottom: 10px; border-radius: 4px; display: none; }
+    #successAlert { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    #errorAlert { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+    /* Simple modal */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+    .modal-content { background: white; padding: 20px; border-radius: 8px; width: 500px; max-height: 80vh; overflow-y: auto; }
+    .close { float: right; cursor: pointer; color: #aaa; font-size: 20px; }
+    .class-card { border: 1px solid #ddd; border-radius: 6px; padding: 15px; margin: 10px 0; background: #fff; }
+    .class-card.selected { border-color: #007bff; background: #e7f1ff; }
+    
+    /* Loading spinner */
+    .spinner { 
+      border: 4px solid #f3f3f3; 
+      border-top: 4px solid #007bff; 
+      border-radius: 50%; 
+      width: 40px; 
+      height: 40px; 
+      animation: spin 2s linear infinite; 
+      margin: 20px auto;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background: linear-gradient(135deg, #f5f7fa, #e4e8ed); color: #333; line-height: 1.6; padding: 0; }
-    .header { background: var(--primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .header h1 { font-size: 24px; font-weight: 700; }
-    .user-info { display: flex; align-items: center; }
-    .user-avatar { width: 35px; height: 35px; border-radius: 50%; background: var(--secondary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px; }
-    .logout-btn, .back-btn { border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: 600; }
-    .logout-btn { background: var(--accent); color: white; margin-left: 15px; }
-    .back-btn { background: #95a5a6; color: white; margin-right: 15px; }
-    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-    .page-title { font-size: 28px; font-weight: 700; color: var(--dark); margin-bottom: 10px; text-align: center; }
-    .page-subtitle { font-size: 16px; color: #7f8c8d; margin-bottom: 30px; text-align: center; }
-    .card { background: white; border-radius: 10px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 25px; }
-    .card-title { font-size: 22px; font-weight: 600; margin-bottom: 20px; color: var(--dark); padding-bottom: 10px; border-bottom: 2px solid #eee; display: flex; align-items: center; }
-    .card-title i { margin-right: 10px; color: var(--secondary); }
-    .filter-section { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 20px; }
-    .filter-group { flex: 1; min-width: 200px; }
-    .filter-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--dark); }
-    .filter-select, .filter-input { width: 100%; padding: 10px 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; transition: border-color 0.3s; }
-    .filter-select:focus, .filter-input:focus { border-color: var(--secondary); outline: none; }
-    .classes-table { width: 100%; border-collapse: collapse; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .classes-table th { background: var(--secondary); color: white; padding: 15px; text-align: left; font-weight: 600; }
-    .classes-table td { padding: 15px; border-bottom: 1px solid #eee; }
-    .classes-table tr { transition: background 0.3s; }
-    .classes-table tr:hover { background: #f8f9fa; }
-    .classes-table tr:nth-child(even) { background: #f9f9f9; }
-    .classes-table tr:nth-child(even):hover { background: #f1f1f1; }
-    .btn { padding: 8px 15px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; justify-content: center; }
-    .btn i { margin-right: 5px; }
-    .btn-book { background: var(--success); color: white; }
-    .btn-book:hover { background: #27ae60; transform: translateY(-2px); }
-    .btn-booked { background: #95a5a6; color: white; cursor: not-allowed; }
-    .btn-disabled { background: #bdc3c7; color: #7f8c8d; cursor: not-allowed; }
-    .btn-waitlist { background: var(--warning); color: white; }
-    .btn-waitlist:hover { background: #e67e22; transform: translateY(-2px); }
-    .btn-details { background: #9b59b6; color: white; }
-    .btn-details:hover { background: #8e44ad; transform: translateY(-2px); }
-    .btn-cancel { background: var(--accent); color: white; }
-    .btn-cancel:hover { background: #c0392b; transform: translateY(-2px); }
-    .btn-new-booking { background: var(--secondary); color: white; margin-bottom: 20px; }
-    .btn-new-booking:hover { background: #2980b9; transform: translateY(-2px); }
-    .alert { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
-    .alert-success { background: #e8f5e9; color: var(--success); border: 1px solid #c3e6cb; }
-    .alert-error { background: #ffebee; color: var(--error); border: 1px solid #ef9a9a; }
-    .loading { text-align: center; padding: 40px; color: #666; }
-    .loading i { display: block; font-size: 40px; margin-bottom: 15px; color: var(--secondary); }
-    .no-classes { text-align: center; padding: 40px; color: #7f8c8d; font-style: italic; }
-    .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
-    .status-available { background: #e6f7ee; color: var(--success); }
-    .status-booked { background: #fef5e6; color: var(--warning); }
-    .status-full { background: #ffe6e6; color: var(--accent); }
-    .status-waitlist { background: #f4ecf7; color: #9b59b6; }
-    
-    /* Modal styles */
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
-    .modal-content { background: white; margin: 5% auto; padding: 25px; border-radius: 10px; width: 90%; max-width: 700px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
-    .close { position: absolute; right: 15px; top: 10px; font-size: 28px; cursor: pointer; color: #7f8c8d; }
-    .close:hover { color: var(--dark); }
-    .modal-title { font-size: 24px; margin-bottom: 15px; color: var(--dark); }
-    .modal-info { margin-bottom: 15px; }
-    .modal-info strong { display: inline-block; width: 120px; color: var(--dark); }
-    
-    /* Booking Form Styles */
-    .booking-form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px; }
-    .form-group { margin-bottom: 20px; }
-    .form-group.full-width { grid-column: 1 / -1; }
-    .form-label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--dark); }
-    .form-input, .form-select, .form-textarea { width: 100%; padding: 12px 15px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; transition: border-color 0.3s; }
-    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--secondary); outline: none; }
-    .form-textarea { min-height: 100px; resize: vertical; }
-    .form-actions { grid-column: 1 / -1; display: flex; gap: 15px; justify-content: flex-end; margin-top: 20px; }
-    .form-row { display: flex; gap: 15px; }
-    .form-row .form-group { flex: 1; }
-    
-    /* Class Selection Grid */
-    .class-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px; }
-    .class-card { background: #f8f9fa; border-radius: 10px; padding: 20px; border: 2px solid #e9ecef; transition: all 0.3s; cursor: pointer; }
-    .class-card:hover { border-color: var(--secondary); transform: translateY(-2px); }
-    .class-card.selected { border-color: var(--success); background: #e8f5e9; }
-    .class-card h4 { margin-bottom: 10px; color: var(--dark); }
-    .class-card p { margin-bottom: 5px; color: #666; }
-    .class-card .class-time { font-weight: 600; color: var(--secondary); }
-    
-    /* View toggle */
-    .view-toggle { display: flex; margin-bottom: 20px; border-radius: 8px; overflow: hidden; border: 2px solid var(--secondary); width: fit-content; }
-    .view-btn { padding: 10px 20px; border: none; background: white; color: var(--secondary); cursor: pointer; font-weight: 600; transition: all 0.3s; }
-    .view-btn.active { background: var(--secondary); color: white; }
-    
-    /* Calendar view */
-    .calendar-view { display: none; }
-    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .calendar-nav { display: flex; gap: 10px; }
-    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
-    .calendar-day { background: #f8f9fa; border-radius: 8px; padding: 15px; min-height: 120px; }
-    .calendar-day-header { font-weight: bold; text-align: center; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid #ddd; }
-    .calendar-day.today { background: #e3f2fd; border: 2px solid var(--secondary); }
-    .calendar-day.other-month { background: #f5f5f5; color: #bdbdbd; }
-    .calendar-class { background: var(--success); color: white; padding: 5px; border-radius: 4px; margin-bottom: 5px; font-size: 12px; cursor: pointer; }
-    .calendar-class.booked { background: var(--warning); }
-    .calendar-class.full { background: var(--accent); }
-    
-    /* My Bookings section */
-    .my-bookings { margin-top: 30px; }
-    .booking-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; background: white; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .booking-info { flex: 1; }
-    .booking-actions { display: flex; gap: 10px; }
-    
-    /* Step indicator */
-    .step-indicator { display: flex; justify-content: space-between; margin-bottom: 30px; position: relative; }
-    .step-indicator::before { content: ''; position: absolute; top: 20px; left: 0; right: 0; height: 2px; background: #ddd; z-index: 1; }
-    .step { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2; }
-    .step-number { width: 40px; height: 40px; border-radius: 50%; background: #ddd; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 10px; }
-    .step.active .step-number { background: var(--secondary); }
-    .step.completed .step-number { background: var(--success); }
-    .step-label { font-size: 14px; font-weight: 600; color: #7f8c8d; }
-    .step.active .step-label { color: var(--secondary); }
-    .step.completed .step-label { color: var(--success); }
-    
-    @media (max-width: 768px) {
-      .classes-table { font-size: 14px; }
-      .classes-table th, .classes-table td { padding: 10px 8px; }
-      .filter-section { flex-direction: column; }
-      .btn { padding: 6px 10px; font-size: 14px; }
-      .header { flex-direction: column; gap: 15px; text-align: center; }
-      .header h1 { font-size: 20px; }
-      .booking-item { flex-direction: column; align-items: flex-start; gap: 10px; }
-      .booking-actions { width: 100%; justify-content: flex-end; }
-      .booking-form { grid-template-columns: 1fr; }
-      .class-grid { grid-template-columns: 1fr; }
-      .form-row { flex-direction: column; }
+    @keyframes spin { 
+      0% { transform: rotate(0deg); } 
+      100% { transform: rotate(360deg); } 
     }
   </style>
 </head>
 <body>
-  <div class="header">
+  <header>
     <div>
-      <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i> Back to Dashboard</button>
+      <h2>Welcome, <span id="userName"></span></h2>
     </div>
-    <h1> </h1>
-    <div class="user-info">
-      <div class="user-avatar" id="userAvatar"></div>
-      <span id="userName"></span>
-      <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <div id="userAvatar" class="avatar"></div>
+      <button id="backBtn" class="btn" style="background: #6c757d; color: white;">Back</button>
+      <button id="logoutBtn" class="btn" style="background: #dc3545; color: white;">Logout</button>
     </div>
-  </div>
+  </header>
 
-  <div class="container">
-    <h1 class="page-title">Available Fitness Classes</h1>
-    <p class="page-subtitle">Browse our class schedule and book your spot</p>
+  <!-- Alerts -->
+  <div id="successAlert" class="alert"></div>
+  <div id="errorAlert" class="alert"></div>
 
-    <div id="successAlert" class="alert alert-success"></div>
-    <div id="errorAlert" class="alert alert-error"></div>
+  <!-- Upcoming Classes -->
+  <h3>Available Classes</h3>
+  <div id="classesLoading">Loading classes...</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Class</th>
+        <th>Date</th>
+        <th>Time</th>
+        <th>Duration</th>
+        <th>Spots</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="classTableBody"></tbody>
+  </table>
+  <p id="noClasses" style="display:none;">No available classes found. Please check back later or contact support.</p>
 
-    <!-- New Booking Button -->
-    <button class="btn btn-new-booking" id="newBookingBtn">
-      <i class="fas fa-plus-circle"></i> Make a New Booking
-    </button>
-
-    <div class="card">
-      <h2 class="card-title"><i class="fas fa-filter"></i> Filter Classes</h2>
-      <div class="filter-section">
-        <div class="filter-group">
-          <label class="filter-label">Class Type</label>
-          <select id="classTypeFilter" class="filter-select">
-            <option value="">All Class Types</option>
-            <option value="Yoga">Yoga</option>
-            <option value="Pilates">Pilates</option>
-            <option value="Zumba">Zumba</option>
-            <option value="Spinning">Spinning</option>
-            <option value="Strength Training">Strength Training</option>
-            <option value="Cardio">Cardio</option>
-            <option value="Boxing">Boxing</option>
-            <option value="Dance">Dance</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label class="filter-label">Date</label>
-          <select id="dateFilter" class="filter-select">
-            <option value="">All Dates</option>
-            <option value="today">Today</option>
-            <option value="tomorrow">Tomorrow</option>
-            <option value="week">This Week</option>
-            <option value="nextweek">Next Week</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label class="filter-label">Time of Day</label>
-          <select id="timeFilter" class="filter-select">
-            <option value="">Any Time</option>
-            <option value="morning">Morning (6am-12pm)</option>
-            <option value="afternoon">Afternoon (12pm-5pm)</option>
-            <option value="evening">Evening (5pm-9pm)</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label class="filter-label">Search by Name</label>
-          <input type="text" id="searchFilter" class="filter-input" placeholder="Enter class name...">
-        </div>
-      </div>
-    </div>
-
-    <div class="view-toggle">
-      <button class="view-btn active" id="tableViewBtn"><i class="fas fa-table"></i> Table View</button>
-      <button class="view-btn" id="calendarViewBtn"><i class="fas fa-calendar-alt"></i> Calendar View</button>
-    </div>
-
-    <div class="card">
-      <h2 class="card-title"><i class="fas fa-dumbbell"></i> Class Schedule</h2>
-      <div id="classesLoading" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading available classes...</div>
-      
-      <!-- Table View -->
-      <div id="tableView" class="table-view">
-        <table class="classes-table">
-          <thead>
-            <tr>
-              <th>Class Name</th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Duration</th>
-              <th>Spots</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="classTableBody"></tbody>
-        </table>
-      </div>
-      
-      <!-- Calendar View -->
-      <div id="calendarView" class="calendar-view">
-        <div class="calendar-header">
-          <button class="btn" id="prevMonthBtn"><i class="fas fa-chevron-left"></i> Previous</button>
-          <h3 id="calendarMonth">Month Year</h3>
-          <button class="btn" id="nextMonthBtn">Next <i class="fas fa-chevron-right"></i></button>
-        </div>
-        <div class="calendar-grid" id="calendarGrid"></div>
-      </div>
-      
-      <div id="noClasses" class="no-classes" style="display: none;">
-        <i class="fas fa-calendar-times" style="font-size: 50px; margin-bottom: 15px;"></i>
-        <h3>No classes available</h3>
-        <p>No classes match your current filters. Try adjusting your search criteria.</p>
-      </div>
-    </div>
-
-    <div class="card my-bookings">
-      <h2 class="card-title"><i class="fas fa-calendar-check"></i> My Bookings</h2>
-      <div id="myBookingsContainer">
-        <div id="bookingsLoading" class="loading"><i class="fas fa-spinner fa-spin"></i> Loading your bookings...</div>
-        <div id="bookingsList"></div>
-      </div>
-    </div>
-  </div>
+  <!-- Your Bookings -->
+  <h3>Your Bookings</h3>
+  <div id="bookingsLoading">Loading your bookings...</div>
+  <div id="bookingsList"></div>
 
   <!-- Class Details Modal -->
   <div id="classDetailsModal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
-      <h3 class="modal-title" id="modalClassName">Class Name</h3>
-      <div class="modal-info">
-        <p><strong>Instructor:</strong> <span id="modalInstructor">TBA</span></p>
-        <p><strong>Date:</strong> <span id="modalDate">N/A</span></p>
-        <p><strong>Time:</strong> <span id="modalTime">N/A</span></p>
-        <p><strong>Duration:</strong> <span id="modalDuration">N/A</span></p>
-        <p><strong>Spots Available:</strong> <span id="modalSpots">N/A</span></p>
-        <p><strong>Difficulty:</strong> <span id="modalDifficulty">All levels</span></p>
-        <p><strong>Equipment:</strong> <span id="modalEquipment">None</span></p>
-      </div>
-      <div>
-        <strong>Description:</strong>
-        <p id="modalDescription">No description available.</p>
-      </div>
-      <div id="modalActions" style="margin-top: 20px; display: flex; gap: 10px;">
-        <!-- Action buttons will be inserted here -->
-      </div>
+      <h3 id="modalClassName"></h3>
+      <p><strong>Instructor:</strong> <span id="modalInstructor"></span></p>
+      <p><strong>Date:</strong> <span id="modalDate"></span></p>
+      <p><strong>Time:</strong> <span id="modalTime"></span></p>
+      <p><strong>Duration:</strong> <span id="modalDuration"></span></p>
+      <p><strong>Spots:</strong> <span id="modalSpots"></span></p>
+      <p><strong>Description:</strong> <span id="modalDescription"></span></p>
+      <div id="modalActions"></div>
     </div>
   </div>
 
-  <!-- New Booking Modal -->
-  <div id="newBookingModal" class="modal">
-    <div class="modal-content">
-      <span class="close">&times;</span>
-      <h3 class="modal-title"><i class="fas fa-calendar-plus"></i> Make a New Booking</h3>
-      
-      <div class="step-indicator">
-        <div class="step active" id="step1">
-          <div class="step-number">1</div>
-          <div class="step-label">Select Class</div>
-        </div>
-        <div class="step" id="step2">
-          <div class="step-number">2</div>
-          <div class="step-label">Booking Details</div>
-        </div>
-        <div class="step" id="step3">
-          <div class="step-number">3</div>
-          <div class="step-label">Confirmation</div>
-        </div>
-      </div>
+  <!-- Add New Booking Button -->
+  <button id="newBookingBtn" class="btn btn-book" style="margin-top:20px;">
+    <i class="fas fa-calendar-plus"></i> New Booking
+  </button>
 
-      <!-- Step 1: Class Selection -->
-      <div id="step1Content" class="step-content">
-        <div class="form-group">
-          <label class="form-label">Search Classes</label>
-          <input type="text" id="classSearch" class="form-input" placeholder="Search by class name, instructor, or type...">
-        </div>
-        
-        <div class="class-grid" id="classSelectionGrid">
-          <!-- Class cards will be populated here -->
-        </div>
-        
-        <div class="form-actions">
-          <button class="btn" onclick="document.getElementById('newBookingModal').style.display='none'">Cancel</button>
-          <button class="btn btn-book" id="nextToStep2" disabled>Next <i class="fas fa-arrow-right"></i></button>
-        </div>
-      </div>
-
-      <!-- Step 2: Booking Details -->
-      <div id="step2Content" class="step-content" style="display: none;">
-        <div class="booking-form">
-          <div class="form-group full-width">
-            <h4>Selected Class: <span id="selectedClassName" style="color: var(--secondary);"></span></h4>
-            <p id="selectedClassDetails"></p>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-label">Number of Participants</label>
-            <select id="participantsCount" class="form-select">
-              <option value="1">1 Participant</option>
-              <option value="2">2 Participants</option>
-              <option value="3">3 Participants</option>
-              <option value="4">4 Participants</option>
-            </select>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-label">Special Requirements</label>
-            <select id="specialRequirements" class="form-select">
-              <option value="none">None</option>
-              <option value="beginner">Beginner Level</option>
-              <option value="pregnancy">Pregnancy Accommodation</option>
-              <option value="injury">Injury Recovery</option>
-              <option value="equipment">Special Equipment Needed</option>
-            </select>
-          </div>
-          
-          <div class="form-group full-width">
-            <label class="form-label">Additional Notes</label>
-            <textarea id="bookingNotes" class="form-textarea" placeholder="Any special requests or notes for the instructor..."></textarea>
-          </div>
-          
-          <div class="form-group full-width">
-            <label class="form-label">
-              <input type="checkbox" id="termsAgreement"> 
-              I agree to the <a href="#" style="color: var(--secondary);">terms and conditions</a> and understand the cancellation policy
-            </label>
-          </div>
-        </div>
-        
-        <div class="form-actions">
-          <button class="btn" id="backToStep1"><i class="fas fa-arrow-left"></i> Back</button>
-          <button class="btn btn-book" id="nextToStep3" disabled>Next <i class="fas fa-arrow-right"></i></button>
-        </div>
-      </div>
-
-      <!-- Step 3: Confirmation -->
-      <div id="step3Content" class="step-content" style="display: none;">
-        <div class="booking-summary">
-          <h4>Booking Summary</h4>
-          <div class="modal-info">
-            <p><strong>Class:</strong> <span id="summaryClassName"></span></p>
-            <p><strong>Date & Time:</strong> <span id="summaryDateTime"></span></p>
-            <p><strong>Participants:</strong> <span id="summaryParticipants"></span></p>
-            <p><strong>Special Requirements:</strong> <span id="summaryRequirements"></span></p>
-            <p><strong>Notes:</strong> <span id="summaryNotes"></span></p>
-          </div>
-          
-          <div class="form-group full-width">
-            <label class="form-label">Receive Confirmation Via:</label>
-            <div class="form-row">
-              <label style="display: flex; align-items: center; gap: 5px;">
-                <input type="checkbox" id="confirmEmail" checked> Email
-              </label>
-              <label style="display: flex; align-items: center; gap: 5px;">
-                <input type="checkbox" id="confirmSMS"> SMS
-              </label>
-            </div>
-          </div>
-        </div>
-        
-        <div class="form-actions">
-          <button class="btn" id="backToStep2"><i class="fas fa-arrow-left"></i> Back</button>
-          <button class="btn btn-book" id="confirmBooking"><i class="fas fa-check"></i> Confirm Booking</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-   const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-let currentMember = null;
-let allClasses = [];
-let userBookings = [];
-let userWaitlist = [];
-let currentCalendarDate = new Date();
-let selectedClassForBooking = null;
-
-document.addEventListener("DOMContentLoaded", async function () {
-  try {
-    const memberData = JSON.parse(localStorage.getItem("member"));
-    if (!memberData || !memberData.memberid) {
-      window.location.href = "member-login.html";
-      return;
-    }
-    currentMember = memberData;
-    document.getElementById("userName").textContent = `${memberData.fname} ${memberData.lname}`;
-    document.getElementById("userAvatar").textContent = memberData.fname.charAt(0).toUpperCase();
-
-    await loadUserData();
-    await loadAvailableClasses();
-    setupEventListeners();
-    setupBookingModal();
-  } catch (error) {
-    console.error("Error initializing bookings page:", error);
-    showError("Failed to initialize booking system. Please try again.");
-  }
-});
-
-async function loadUserData() {
-  try {
-    // Load user bookings - using singular table names based on your schema
-    const { data: bookings, error: bookingsError } = await supabase
-      .from('booking')
-      .select(`
-        *,
-        class (
-          classname,
-          scheduledate,
-          scheduletime,
-          instructor
-        )
-      `)
-      .eq('memberid', currentMember.memberid)
-      .order('bookingdate', { ascending: false });
-
-    if (bookingsError) throw bookingsError;
-    userBookings = bookings || [];
-
-    // Load user waitlist entries
-    const { data: waitlist, error: waitlistError } = await supabase
-      .from('waitlist')
-      .select(`
-        *,
-        class (
-          classname,
-          scheduledate,
-          scheduletime,
-          instructor
-        )
-      `)
-      .eq('memberid', currentMember.memberid);
-
-    if (waitlistError) throw waitlistError;
-    userWaitlist = waitlist || [];
-
-    displayUserBookings();
-  } catch (error) {
-    console.error("Error loading user data:", error);
-    showError("Failed to load your booking information.");
-  }
-}
-
-async function loadAvailableClasses() {
-  try {
-    document.getElementById("classesLoading").style.display = "block";
-    document.getElementById("classTableBody").innerHTML = "";
-    document.getElementById("noClasses").style.display = "none";
-
-    // Using singular 'class' table name
-    const { data: classes, error } = await supabase
-      .from('class')
-      .select('*')
-      .gte('scheduledate', new Date().toISOString().split('T')[0])
-      .order('scheduledate')
-      .order('scheduletime');
-
-    if (error) throw error;
-
-    allClasses = classes || [];
-    applyFilters();
+    // Initialize Supabase client
+    const supabaseUrl = "https://bxufacemathzdfqzmlad.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
     
-  } catch (error) {
-    console.error("Error loading classes:", error);
-    showError("Failed to load available classes.");
-  } finally {
-    document.getElementById("classesLoading").style.display = "none";
-  }
-}
-
-function setupBookingModal() {
-  // New Booking Button
-  document.getElementById("newBookingBtn").addEventListener("click", () => {
-    document.getElementById("newBookingModal").style.display = "block";
-    populateClassSelectionGrid(allClasses);
-  });
-
-  // Class Search
-  document.getElementById("classSearch").addEventListener("input", (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    const filteredClasses = allClasses.filter(cls => 
-      cls.classname.toLowerCase().includes(searchTerm) ||
-      (cls.instructor && cls.instructor.toLowerCase().includes(searchTerm))
-    );
-    populateClassSelectionGrid(filteredClasses);
-  });
-
-  // Step Navigation
-  document.getElementById("nextToStep2").addEventListener("click", goToStep2);
-  document.getElementById("backToStep1").addEventListener("click", goToStep1);
-  document.getElementById("nextToStep3").addEventListener("click", goToStep3);
-  document.getElementById("backToStep2").addEventListener("click", goToStep2);
-  document.getElementById("confirmBooking").addEventListener("click", confirmBooking);
-
-  // Terms agreement toggle
-  document.getElementById("termsAgreement").addEventListener("change", (e) => {
-    document.getElementById("nextToStep3").disabled = !e.target.checked;
-  });
-}
-
-function populateClassSelectionGrid(classes) {
-  const grid = document.getElementById("classSelectionGrid");
-  grid.innerHTML = "";
-
-  if (classes.length === 0) {
-    grid.innerHTML = '<p class="no-classes">No classes match your search criteria.</p>';
-    return;
-  }
-
-  classes.forEach(cls => {
-    const classDate = new Date(cls.scheduledate).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
-    const classTime = formatTime(cls.scheduletime);
-    const spotsAvailable = cls.capacity - (cls.booked || 0);
-    const isBooked = userBookings.some(b => b.classid === cls.classid);
-    const isFull = spotsAvailable <= 0;
-
-    if (isBooked || isFull) return; // Skip already booked or full classes
-
-    const card = document.createElement("div");
-    card.className = "class-card";
-    card.innerHTML = `
-      <h4>${cls.classname}</h4>
-      <p class="class-time">${classDate} at ${classTime}</p>
-      <p><strong>Instructor:</strong> ${cls.instructor || 'TBA'}</p>
-      <p><strong>Duration:</strong> ${calculateDuration(formatTime(cls.scheduletime), cls.endtime ? formatTime(cls.endtime) : "N/A")}</p>
-      <p><strong>Spots:</strong> ${spotsAvailable} available</p>
-      <p><strong>Difficulty:</strong> ${cls.difficulty || 'All levels'}</p>
-    `;
-
-    card.addEventListener("click", () => {
-      document.querySelectorAll(".class-card").forEach(c => c.classList.remove("selected"));
-      card.classList.add("selected");
-      selectedClassForBooking = cls;
-      document.getElementById("nextToStep2").disabled = false;
-    });
-
-    grid.appendChild(card);
-  });
-}
-
-function goToStep2() {
-  if (!selectedClassForBooking) return;
-
-  document.getElementById("step1").classList.remove("active");
-  document.getElementById("step2").classList.add("active");
-  document.getElementById("step1Content").style.display = "none";
-  document.getElementById("step2Content").style.display = "block";
-
-  const cls = selectedClassForBooking;
-  const classDate = new Date(cls.scheduledate).toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-  const classTime = formatTime(cls.scheduletime);
-
-  document.getElementById("selectedClassName").textContent = cls.classname;
-  document.getElementById("selectedClassDetails").textContent = 
-    `${classDate} at ${classTime} with ${cls.instructor || 'TBA'}`;
-}
-
-function goToStep1() {
-  document.getElementById("step2").classList.remove("active");
-  document.getElementById("step1").classList.add("active");
-  document.getElementById("step2Content").style.display = "none";
-  document.getElementById("step1Content").style.display = "block";
-}
-
-function goToStep3() {
-  if (!selectedClassForBooking) return;
-
-  document.getElementById("step2").classList.remove("active");
-  document.getElementById("step3").classList.add("active");
-  document.getElementById("step2Content").style.display = "none";
-  document.getElementById("step3Content").style.display = "block";
-
-  const cls = selectedClassForBooking;
-  const classDate = new Date(cls.scheduledate).toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-  const classTime = formatTime(cls.scheduletime);
-
-  document.getElementById("summaryClassName").textContent = cls.classname;
-  document.getElementById("summaryDateTime").textContent = `${classDate} at ${classTime}`;
-  document.getElementById("summaryParticipants").textContent = document.getElementById("participantsCount").value;
-  document.getElementById("summaryRequirements").textContent = 
-    document.getElementById("specialRequirements").options[document.getElementById("specialRequirements").selectedIndex].text;
-  document.getElementById("summaryNotes").textContent = 
-    document.getElementById("bookingNotes").value || "None";
-}
-
-function goBackToStep2() {
-  document.getElementById("step3").classList.remove("active");
-  document.getElementById("step2").classList.add("active");
-  document.getElementById("step3Content").style.display = "none";
-  document.getElementById("step2Content").style.display = "block";
-}
-
-async function confirmBooking() {
-  try {
-    const confirmBtn = document.getElementById("confirmBooking");
-    confirmBtn.disabled = true;
-    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-
-    if (!selectedClassForBooking) {
-      throw new Error("No class selected for booking");
-    }
-
-    // Check if class is still available
-    const { data: currentClass, error: classError } = await supabase
-      .from('class')
-      .select('*')
-      .eq('classid', selectedClassForBooking.classid)
-      .single();
-
-    if (classError) throw classError;
-
-    const spotsAvailable = currentClass.capacity - (currentClass.booked || 0);
-    const participantsCount = parseInt(document.getElementById("participantsCount").value);
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
     
-    if (spotsAvailable < participantsCount) {
-      throw new Error(`Only ${spotsAvailable} spot(s) available, but you requested ${participantsCount}`);
-    }
+    let memberId = null;
 
-    // Create booking record
-    const bookingData = {
-      memberid: currentMember.memberid,
-      classid: selectedClassForBooking.classid,
-      bookingdate: new Date().toISOString().split('T')[0],
-      participants: participantsCount,
-      specialrequirements: document.getElementById("specialRequirements").value,
-      notes: document.getElementById("bookingNotes").value,
-      status: 'confirmed'
-    };
+    document.addEventListener("DOMContentLoaded", async function () {
+      try {
+        const memberData = JSON.parse(localStorage.getItem("member"));
+        console.log("Retrieved member data from localStorage:", memberData);
 
-    const { data: booking, error: bookingError } = await supabase
-      .from('booking')
-      .insert([bookingData])
-      .select()
-      .single();
-
-    if (bookingError) throw bookingError;
-
-    // Update class booked count
-    const { error: updateError } = await supabase
-      .from('class')
-      .update({ booked: (currentClass.booked || 0) + participantsCount })
-      .eq('classid', selectedClassForBooking.classid);
-
-    if (updateError) throw updateError;
-
-    // Create attendance record
-    const attendanceData = {
-      memberid: currentMember.memberid,
-      classid: selectedClassForBooking.classid,
-      attended: false,
-      bookingid: booking.bookingid
-    };
-
-    const { error: attendanceError } = await supabase
-      .from('attendance')
-      .insert([attendanceData]);
-
-    if (attendanceError) throw attendanceError;
-
-    showSuccess(`Successfully booked ${participantsCount} spot(s) for ${selectedClassForBooking.classname}!`);
-    
-    document.getElementById("newBookingModal").style.display = "none";
-    resetBookingModal();
-    
-    await loadUserData();
-    await loadAvailableClasses();
-    
-  } catch (error) {
-    console.error("Error confirming booking:", error);
-    showError(error.message || "Failed to complete booking. Please try again.");
-  } finally {
-    confirmBtn.disabled = false;
-    confirmBtn.innerHTML = '<i class="fas fa-check"></i> Confirm Booking';
-  }
-}
-
-function resetBookingModal() {
-  document.getElementById("step1").classList.add("active");
-  document.getElementById("step2").classList.remove("active");
-  document.getElementById("step3").classList.remove("active");
-  
-  document.getElementById("step1Content").style.display = "block";
-  document.getElementById("step2Content").style.display = "none";
-  document.getElementById("step3Content").style.display = "none";
-  
-  selectedClassForBooking = null;
-  document.getElementById("classSearch").value = "";
-  document.getElementById("participantsCount").value = "1";
-  document.getElementById("specialRequirements").value = "none";
-  document.getElementById("bookingNotes").value = "";
-  document.getElementById("termsAgreement").checked = false;
-  document.getElementById("confirmEmail").checked = true;
-  document.getElementById("confirmSMS").checked = false;
-  
-  document.querySelectorAll(".class-card").forEach(c => c.classList.remove("selected"));
-}
-
-function applyFilters() {
-  let filteredClasses = [...allClasses];
-  
-  // Class type filter
-  const classType = document.getElementById("classTypeFilter").value;
-  if (classType) {
-    filteredClasses = filteredClasses.filter(cls => 
-      cls.classname.toLowerCase().includes(classType.toLowerCase())
-    );
-  }
-  
-  // Date filter
-  const dateFilter = document.getElementById("dateFilter").value;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  if (dateFilter === "today") {
-    filteredClasses = filteredClasses.filter(cls => 
-      new Date(cls.scheduledate).getTime() === today.getTime()
-    );
-  } else if (dateFilter === "tomorrow") {
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    filteredClasses = filteredClasses.filter(cls => 
-      new Date(cls.scheduledate).getTime() === tomorrow.getTime()
-    );
-  } else if (dateFilter === "week") {
-    const weekEnd = new Date(today);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-    filteredClasses = filteredClasses.filter(cls => {
-      const classDate = new Date(cls.scheduledate);
-      return classDate >= today && classDate <= weekEnd;
-    });
-  } else if (dateFilter === "nextweek") {
-    const nextWeekStart = new Date(today);
-    nextWeekStart.setDate(nextWeekStart.getDate() + 7);
-    const nextWeekEnd = new Date(nextWeekStart);
-    nextWeekEnd.setDate(nextWeekEnd.getDate() + 7);
-    filteredClasses = filteredClasses.filter(cls => {
-      const classDate = new Date(cls.scheduledate);
-      return classDate >= nextWeekStart && classDate <= nextWeekEnd;
-    });
-  }
-  
-  // Time filter
-  const timeFilter = document.getElementById("timeFilter").value;
-  if (timeFilter) {
-    filteredClasses = filteredClasses.filter(cls => {
-      const classTime = parseInt(cls.scheduletime.split(':')[0]);
-      if (timeFilter === "morning") return classTime >= 6 && classTime < 12;
-      if (timeFilter === "afternoon") return classTime >= 12 && classTime < 17;
-      if (timeFilter === "evening") return classTime >= 17 && classTime < 21;
-      return true;
-    });
-  }
-  
-  // Search filter
-  const searchTerm = document.getElementById("searchFilter").value.toLowerCase();
-  if (searchTerm) {
-    filteredClasses = filteredClasses.filter(cls => 
-      cls.classname.toLowerCase().includes(searchTerm) ||
-      (cls.instructor && cls.instructor.toLowerCase().includes(searchTerm))
-    );
-  }
-  
-  displayClassTable(filteredClasses);
-}
-
-function displayClassTable(classes) {
-  const tableBody = document.getElementById("classTableBody");
-  tableBody.innerHTML = "";
-
-  if (classes.length === 0) {
-    document.getElementById("noClasses").style.display = "block";
-    return;
-  }
-
-  document.getElementById("noClasses").style.display = "none";
-
-  classes.forEach(cls => {
-    const classDate = new Date(cls.scheduledate).toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-    
-    const classTime = formatTime(cls.scheduletime);
-    const spotsAvailable = cls.capacity - (cls.booked || 0);
-    
-    let status, statusClass, statusText;
-    if (spotsAvailable <= 0) {
-      status = "full";
-      statusClass = "status-full";
-      statusText = "Full";
-    } else if (spotsAvailable <= 3) {
-      status = "limited";
-      statusClass = "status-waitlist";
-      statusText = "Limited";
-    } else {
-      status = "available";
-      statusClass = "status-available";
-      statusText = "Available";
-    }
-    
-    const isBooked = userBookings.some(b => b.classid === cls.classid);
-    const isWaitlisted = userWaitlist.some(w => w.classid === cls.classid);
-    
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td><strong>${cls.classname}</strong></td>
-      <td>${classDate}</td>
-      <td>${classTime}</td>
-      <td>${calculateDuration(formatTime(cls.scheduletime), cls.endtime ? formatTime(cls.endtime) : "N/A")}</td>
-      <td>${spotsAvailable} / ${cls.capacity}</td>
-      <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-      <td>
-        <button class="btn btn-details btn-view-details" data-classid="${cls.classid}">
-          <i class="fas fa-info-circle"></i> Details
-        </button>
-        ${isBooked ? 
-          `<button class="btn btn-booked" disabled><i class="fas fa-check"></i> Booked</button>` :
-          spotsAvailable <= 0 ? 
-            (isWaitlisted ?
-              `<button class="btn btn-waitlist" disabled><i class="fas fa-clock"></i> Waitlisted</button>` :
-              `<button class="btn btn-waitlist btn-join-waitlist" data-classid="${cls.classid}"><i class="fas fa-clock"></i> Join Waitlist</button>`
-            ) :
-            `<button class="btn btn-book btn-book-class" data-classid="${cls.classid}"><i class="fas fa-calendar-plus"></i> Book</button>`
+        if (!memberData || !memberData.memberid) {
+          alert("No valid member data found. Please log in again.");
+          window.location.href = "member-login.html";
+          return;
         }
-      </td>
-    `;
-    
-    tableBody.appendChild(row);
-  });
 
-  // Add event listeners to buttons
-  document.querySelectorAll('.btn-view-details').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const classId = e.target.closest('button').dataset.classid;
-      showClassDetails(classId);
+        // Display member info
+        const name = `${memberData.fname || ''} ${memberData.lname || ''}`.trim();
+        document.getElementById("userName").innerText = name || 'Member';
+        const initials = name ? name.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase() : 'M';
+        document.getElementById("userAvatar").innerText = initials;
+
+        memberId = memberData.memberid;
+
+        // Check if tables exist and load data
+        const tablesExist = await ensureTablesExist();
+        if (tablesExist) {
+          await loadAvailableClasses();
+          await loadUserBookings();
+        }
+
+      } catch (err) {
+        console.error("Error initializing booking page:", err);
+        alert("Failed to load booking page. Please log in again.");
+        window.location.href = "member-login.html";
+      }
     });
-  });
 
-  document.querySelectorAll('.btn-book-class').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const classId = e.target.closest('button').dataset.classid;
-      quickBookClass(classId);
+    // Event listeners
+    document.getElementById("backBtn").addEventListener("click", () => {
+      window.location.href = "member-dashboard.html";
     });
-  });
 
-  document.querySelectorAll('.btn-join-waitlist').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const classId = e.target.closest('button').dataset.classid;
-      joinWaitlist(classId);
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("member");
+      window.location.href = "member-login.html";
     });
-  });
-}
 
-function displayUserBookings() {
-  const bookingsList = document.getElementById("bookingsList");
-  const bookingsLoading = document.getElementById("bookingsLoading");
-  
-  bookingsLoading.style.display = "none";
-  
-  if (userBookings.length === 0) {
-    bookingsList.innerHTML = '<p class="no-classes">You have no upcoming bookings.</p>';
-    return;
-  }
-
-  bookingsList.innerHTML = userBookings.map(booking => {
-    const classInfo = booking.class;
-    if (!classInfo) return '';
-    
-    const classDate = new Date(classInfo.scheduledate).toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    document.getElementById("newBookingBtn").addEventListener("click", () => {
+      // Scroll to classes table
+      document.querySelector('h3').scrollIntoView({ behavior: 'smooth' });
     });
-    const classTime = formatTime(classInfo.scheduletime);
-    
-    return `
-      <div class="booking-item">
-        <div class="booking-info">
-          <h4>${classInfo.classname}</h4>
-          <p>${classDate} at ${classTime}</p>
-          <p>Instructor: ${classInfo.instructor || 'TBA'}</p>
-          <p>Participants: ${booking.participants || 1}</p>
-          <p>Status: <span class="status-badge status-booked">Confirmed</span></p>
-        </div>
-        <div class="booking-actions">
-          <button class="btn btn-details" onclick="showClassDetails(${classInfo.classid})">
-            <i class="fas fa-info-circle"></i> Details
-          </button>
-          <button class="btn btn-cancel" onclick="cancelBooking(${booking.bookingid})">
-            <i class="fas fa-times"></i> Cancel
-          </button>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
 
-function setupEventListeners() {
-  // Back button
-  document.getElementById("backBtn").addEventListener("click", () => {
-    window.location.href = "member-dashboard.html";
-  });
+    // Alert function
+    function showAlert(message, type = 'success') {
+      const alertDiv = type === 'success' ? document.getElementById('successAlert') : document.getElementById('errorAlert');
+      const otherAlert = type === 'success' ? document.getElementById('errorAlert') : document.getElementById('successAlert');
+      otherAlert.style.display = 'none';
+      alertDiv.innerText = message;
+      alertDiv.style.display = 'block';
+      setTimeout(() => alertDiv.style.display = 'none', 5000);
+    }
 
-  // Logout button
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    localStorage.removeItem("member");
-    window.location.href = "member-login.html";
-  });
+    // Check if database tables exist
+    async function ensureTablesExist() {
+      try {
+        const { data: classes, error } = await supabase.from("class").select("*").limit(1);
+        if (error) {
+          console.log("Class table might not exist:", error);
+          showAlert('Class table not found. Contact admin.', 'error');
+          return false;
+        }
+        console.log("Class table exists, records:", classes ? classes.length : 0);
+        return true;
+      } catch (err) {
+        console.error("Error ensuring tables exist:", err);
+        showAlert('Error checking database tables.', 'error');
+        return false;
+      }
+    }
 
-  // Filter event listeners
-  document.getElementById("classTypeFilter").addEventListener("change", applyFilters);
-  document.getElementById("dateFilter").addEventListener("change", applyFilters);
-  document.getElementById("timeFilter").addEventListener("change", applyFilters);
-  document.getElementById("searchFilter").addEventListener("input", applyFilters);
+    // Load available classes
+    async function loadAvailableClasses() {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        let { data: classes, error } = await supabase
+          .from("class")
+          .select("*")
+          .gte("scheduledate", today)
+          .order("scheduledate", { ascending: true })
+          .order("starttime", { ascending: true });
 
-  // View toggle
-  document.getElementById("tableViewBtn").addEventListener("click", () => {
-    document.getElementById("tableViewBtn").classList.add("active");
-    document.getElementById("calendarViewBtn").classList.remove("active");
-    document.getElementById("tableView").style.display = "block";
-    document.getElementById("calendarView").style.display = "none";
-  });
+        if (error) {
+          console.error("Supabase error:", error);
+          document.getElementById("classesLoading").innerHTML = `<div style="color:red;"><i class="fas fa-exclamation-triangle"></i> Error loading classes.</div>`;
+          return;
+        }
 
-  document.getElementById("calendarViewBtn").addEventListener("click", () => {
-    document.getElementById("calendarViewBtn").classList.add("active");
-    document.getElementById("tableViewBtn").classList.remove("active");
-    document.getElementById("tableView").style.display = "none";
-    document.getElementById("calendarView").style.display = "block";
-    renderCalendar();
-  });
+        document.getElementById("classesLoading").style.display = "none";
+        const tbody = document.getElementById("classTableBody");
+        const noClassesMsg = document.getElementById("noClasses");
+        tbody.innerHTML = "";
 
-  // Calendar navigation
-  document.getElementById("prevMonthBtn").addEventListener("click", () => {
-    currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
-    renderCalendar();
-  });
+        if (!classes || classes.length === 0) {
+          noClassesMsg.style.display = "block";
+          noClassesMsg.innerHTML = "No available classes found. Please check back later or contact support.";
+          return;
+        }
 
-  document.getElementById("nextMonthBtn").addEventListener("click", () => {
-    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
-    renderCalendar();
-  });
+        noClassesMsg.style.display = "none";
 
-  // Modal close buttons
-  document.querySelectorAll(".close").forEach(closeBtn => {
-    closeBtn.addEventListener("click", function() {
-      this.closest(".modal").style.display = "none";
+        classes.forEach(cls => {
+          const classname = cls.classname || 'Unnamed Class';
+          const scheduledate = cls.scheduledate || 'Date not set';
+          const starttime = cls.starttime || 'TBA';
+          const endtime = cls.endtime || 'TBA';
+          const duration = cls.duration || 60;
+          const booked = Number(cls.booked) || 0;
+          const capacity = Number(cls.capacity) || 20;
+
+          const spotsLeft = capacity - booked;
+          let statusClass = spotsLeft <= 0 ? "status-full" : "status-available";
+          let statusText = spotsLeft <= 0 ? "Full" : "Available";
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${classname}</td>
+            <td>${scheduledate}</td>
+            <td>${starttime} - ${endtime}</td>
+            <td>${duration} mins</td>
+            <td>${booked}/${capacity}</td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>
+              <button class="btn btn-details" onclick="openClassDetails(${cls.classid})">
+                <i class="fas fa-info-circle"></i> Details
+              </button>
+              ${spotsLeft > 0 ? `<button class="btn btn-book" onclick="bookClass(${cls.classid})"><i class="fas fa-bookmark"></i> Book Now</button>` : ''}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+      } catch (err) {
+        console.error("Error loading classes:", err);
+        document.getElementById("classesLoading").innerHTML = `<div style="color:red;"><i class="fas fa-exclamation-triangle"></i> Error loading classes. <button onclick="loadAvailableClasses()" class="btn"><i class="fas fa-redo"></i> Retry</button></div>`;
+      }
+    }
+
+    // Load user bookings
+    async function loadUserBookings() {
+      try {
+        const { data: bookings, error } = await supabase
+          .from("booking")
+          .select(`*, class:classid (classname, scheduledate, starttime, endtime, instructor)`)
+          .eq("memberid", memberId)
+          .order("bookingdate", { ascending: false });
+
+        if (error) throw error;
+
+        document.getElementById("bookingsLoading").style.display = "none";
+        const bookingsList = document.getElementById("bookingsList");
+        bookingsList.innerHTML = "";
+
+        if (!bookings || bookings.length === 0) {
+          bookingsList.innerHTML = "<p>You have no bookings.</p>";
+          return;
+        }
+
+        bookings.forEach(b => {
+          const div = document.createElement("div");
+          div.className = "class-card";
+          div.id = `booking-${b.bookingid}`;
+          const classDate = new Date(b.class.scheduledate + 'T' + b.class.starttime);
+          const isPastClass = classDate < new Date();
+
+          div.innerHTML = `
+            <strong>${b.class.classname}</strong><br>
+            Instructor: ${b.class.instructor || 'TBA'}<br>
+            Date: ${b.class.scheduledate}<br>
+            Time: ${b.class.starttime} - ${b.class.endtime}<br>
+            Booking ID: ${b.bookingid}<br>
+            ${isPastClass ? '<span class="status-badge status-full">Completed</span>' : '<button class="btn btn-cancel" onclick="cancelBooking(' + b.bookingid + ', ' + b.classid + ')">Cancel Booking</button>'}
+          `;
+          bookingsList.appendChild(div);
+        });
+
+      } catch (err) {
+        console.error("Error loading bookings:", err);
+        document.getElementById("bookingsLoading").innerText = "Error loading bookings";
+      }
+    }
+
+    // Cancel booking function
+    async function cancelBooking(bookingId, classId) {
+      if (!confirm("Are you sure you want to cancel this booking?")) return;
+
+      try {
+        const cancelBtn = document.querySelector(`button[onclick="cancelBooking(${bookingId}, ${classId})"]`);
+        if (cancelBtn) { 
+          cancelBtn.disabled = true; 
+          cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Canceling...'; 
+        }
+
+        // First, get the current booked count
+        const { data: classData, error: classError } = await supabase
+          .from("class")
+          .select("booked")
+          .eq("classid", classId)
+          .single();
+          
+        if (classError) throw classError;
+
+        // Delete the booking
+        const { error: deleteError } = await supabase
+          .from("booking")
+          .delete()
+          .eq("bookingid", bookingId)
+          .eq("memberid", memberId);
+          
+        if (deleteError) throw deleteError;
+
+        // Update the class booked count
+        const newBookedCount = Math.max(0, (Number(classData.booked) || 0) - 1);
+        const { error: updateError } = await supabase
+          .from("class")
+          .update({ booked: newBookedCount })
+          .eq("classid", classId);
+          
+        if (updateError) throw updateError;
+
+        showAlert('Booking cancelled successfully!', 'success');
+        document.getElementById(`booking-${bookingId}`)?.remove();
+        await loadAvailableClasses();
+
+      } catch (err) {
+        console.error("Error canceling booking:", err);
+        showAlert('Failed to cancel booking. Please try again.', 'error');
+        const cancelBtn = document.querySelector(`button[onclick="cancelBooking(${bookingId}, ${classId})"]`);
+        if (cancelBtn) { 
+          cancelBtn.disabled = false; 
+          cancelBtn.innerHTML = 'Cancel Booking'; 
+        }
+      }
+    }
+
+    // Open class details modal
+    async function openClassDetails(classId) {
+      try {
+        const { data: classData, error } = await supabase
+          .from("class")
+          .select("*")
+          .eq("classid", classId)
+          .single();
+          
+        if (error || !classData) throw error || new Error("Class not found");
+
+        const spotsLeft = (Number(classData.capacity) || 20) - (Number(classData.booked) || 0);
+
+        document.getElementById("modalClassName").innerText = classData.classname || 'Unnamed Class';
+        document.getElementById("modalInstructor").innerText = classData.instructor || 'TBA';
+        document.getElementById("modalDate").innerText = classData.scheduledate || 'Date not set';
+        document.getElementById("modalTime").innerText = `${classData.starttime || 'TBA'} - ${classData.endtime || 'TBA'}`;
+        document.getElementById("modalDuration").innerText = `${classData.duration || 60} minutes`;
+        document.getElementById("modalSpots").innerText = `${spotsLeft} spots available (${classData.booked || 0}/${classData.capacity || 20} booked)`;
+        document.getElementById("modalDescription").innerText = classData.description || 'No description available.';
+
+        const modalActions = document.getElementById("modalActions");
+        modalActions.innerHTML = '';
+        if (spotsLeft > 0) {
+          const bookBtn = document.createElement('button');
+          bookBtn.className = 'btn btn-book';
+          bookBtn.innerHTML = '<i class="fas fa-bookmark"></i> Book This Class';
+          bookBtn.onclick = () => bookClass(classId);
+          modalActions.appendChild(bookBtn);
+        } else {
+          const waitlistBtn = document.createElement('button');
+          waitlistBtn.className = 'btn btn-details';
+          waitlistBtn.innerHTML = '<i class="fas fa-clipboard-list"></i> Join Waitlist';
+          waitlistBtn.onclick = () => joinWaitlist(classId);
+          modalActions.appendChild(waitlistBtn);
+        }
+
+        document.getElementById("classDetailsModal").style.display = 'flex';
+      } catch (err) {
+        console.error("Error loading class details:", err);
+        showAlert('Error loading class details. Please try again.', 'error');
+      }
+    }
+
+    // Book a class
+    async function bookClass(classId) {
+      if (!confirm("Are you sure you want to book this class?")) return;
+
+      try {
+        const { data: classData, error: classError } = await supabase
+          .from("class")
+          .select("booked, capacity, classname")
+          .eq("classid", classId)
+          .single();
+          
+        if (classError) throw classError;
+
+        const spotsLeft = (Number(classData.capacity) || 20) - (Number(classData.booked) || 0);
+        if (spotsLeft <= 0) {
+          alert("Sorry, this class is now full!");
+          await loadAvailableClasses();
+          return;
+        }
+
+        // Check if user already booked this class
+        const { data: existingBooking, error: checkError } = await supabase
+          .from("booking")
+          .select("bookingid")
+          .eq("memberid", memberId)
+          .eq("classid", classId)
+          .single();
+          
+        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "not found" error
+          throw checkError;
+        }
+        
+        if (existingBooking) {
+          showAlert('You have already booked this class!', 'error');
+          return;
+        }
+
+        // Create the booking
+        const { error: bookingError } = await supabase
+          .from("booking")
+          .insert({
+            memberid: memberId,
+            classid: classId,
+            bookingdate: new Date().toISOString().split("T")[0],
+            status: "confirmed"
+          });
+          
+        if (bookingError) throw bookingError;
+
+        // Update the class booked count
+        const { error: updateError } = await supabase
+          .from("class")
+          .update({ booked: (Number(classData.booked) || 0) + 1 })
+          .eq("classid", classId);
+          
+        if (updateError) throw updateError;
+
+        showAlert(`Successfully booked ${classData.classname}!`, 'success');
+        document.getElementById("classDetailsModal").style.display = 'none';
+        await loadAvailableClasses();
+        await loadUserBookings();
+
+      } catch (err) {
+        console.error("Error booking class:", err);
+        showAlert('Failed to book class. Please try again.', 'error');
+      }
+    }
+
+    // Join waitlist (placeholder)
+    async function joinWaitlist(classId) {
+      alert("Waitlist functionality coming soon!");
+    }
+
+    // Modal close functionality
+    document.querySelectorAll('.close').forEach(closeBtn => {
+      closeBtn.addEventListener('click', function() {
+        this.closest('.modal').style.display = 'none';
+      });
     });
-  });
 
-  // Close modal when clicking outside
-  window.addEventListener("click", function(event) {
-    if (event.target.classList.contains("modal")) {
-      event.target.style.display = "none";
-    }
-  });
-}
+    window.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+      }
+    });
 
-// Utility functions
-function formatTime(timeString) {
-  if (!timeString) return "N/A";
-  const [hours, minutes] = timeString.split(':');
-  const hour = parseInt(hours);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour % 12 || 12;
-  return `${displayHour}:${minutes} ${ampm}`;
-}
-
-function calculateDuration(startTime, endTime) {
-  if (!startTime || !endTime || endTime === "N/A") return "1 hour";
-  
-  try {
-    const start = new Date(`2000-01-01 ${startTime}`);
-    const end = new Date(`2000-01-01 ${endTime}`);
-    const diffMs = end - start;
-    const diffMins = Math.floor(diffMs / 60000);
-    const hours = Math.floor(diffMins / 60);
-    const mins = diffMins % 60;
-    
-    if (hours > 0) {
-      return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
-    }
-    return `${mins}m`;
-  } catch (e) {
-    return "1 hour";
-  }
-}
-
-function showSuccess(message) {
-  const alert = document.getElementById("successAlert");
-  alert.textContent = message;
-  alert.style.display = "block";
-  setTimeout(() => {
-    alert.style.display = "none";
-  }, 5000);
-}
-
-function showError(message) {
-  const alert = document.getElementById("errorAlert");
-  alert.textContent = message;
-  alert.style.display = "block";
-  setTimeout(() => {
-    alert.style.display = "none";
-  }, 5000);
-}
-
-// Additional functions
-async function showClassDetails(classId) {
-  const cls = allClasses.find(c => c.classid === parseInt(classId));
-  if (!cls) return;
-
-  document.getElementById("modalClassName").textContent = cls.classname;
-  document.getElementById("modalInstructor").textContent = cls.instructor || 'TBA';
-  document.getElementById("modalDate").textContent = new Date(cls.scheduledate).toLocaleDateString('en-US', { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
-  });
-  document.getElementById("modalTime").textContent = formatTime(cls.scheduletime);
-  document.getElementById("modalDuration").textContent = calculateDuration(formatTime(cls.scheduletime), cls.endtime ? formatTime(cls.endtime) : "N/A");
-  
-  const spotsAvailable = cls.capacity - (cls.booked || 0);
-  document.getElementById("modalSpots").textContent = `${spotsAvailable} of ${cls.capacity}`;
-  document.getElementById("modalDifficulty").textContent = cls.difficulty || 'All levels';
-  document.getElementById("modalEquipment").textContent = cls.equipment || 'None';
-  document.getElementById("modalDescription").textContent = cls.description || 'No description available.';
-
-  const modalActions = document.getElementById("modalActions");
-  const isBooked = userBookings.some(b => b.classid === cls.classid);
-  const isWaitlisted = userWaitlist.some(w => w.classid === cls.classid);
-
-  modalActions.innerHTML = '';
-  
-  if (isBooked) {
-    modalActions.innerHTML = `
-      <button class="btn btn-booked" disabled><i class="fas fa-check"></i> Already Booked</button>
-      <button class="btn btn-cancel" onclick="cancelBookingByClass(${cls.classid})"><i class="fas fa-times"></i> Cancel Booking</button>
-    `;
-  } else if (spotsAvailable <= 0) {
-    if (isWaitlisted) {
-      modalActions.innerHTML = `
-        <button class="btn btn-waitlist" disabled><i class="fas fa-clock"></i> On Waitlist</button>
-      `;
-    } else {
-      modalActions.innerHTML = `
-        <button class="btn btn-waitlist" onclick="joinWaitlist(${cls.classid})"><i class="fas fa-clock"></i> Join Waitlist</button>
-      `;
-    }
-  } else {
-    modalActions.innerHTML = `
-      <button class="btn btn-book" onclick="quickBookClass(${cls.classid})"><i class="fas fa-calendar-plus"></i> Book Class</button>
-    `;
-  }
-
-  document.getElementById("classDetailsModal").style.display = "block";
-}
-
-async function quickBookClass(classId) {
-  const cls = allClasses.find(c => c.classid === parseInt(classId));
-  if (!cls) return;
-
-  selectedClassForBooking = cls;
-  document.getElementById("newBookingModal").style.display = "block";
-  populateClassSelectionGrid([cls]);
-  
-  setTimeout(() => {
-    const classCard = document.querySelector(`.class-card`);
-    if (classCard) {
-      classCard.click();
-      goToStep2();
-    }
-  }, 100);
-}
-
-async function joinWaitlist(classId) {
-  try {
-    const cls = allClasses.find(c => c.classid === parseInt(classId));
-    if (!cls) throw new Error("Class not found");
-
-    const isWaitlisted = userWaitlist.some(w => w.classid === cls.classid);
-    if (isWaitlisted) {
-      showError("You are already on the waitlist for this class.");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('waitlist')
-      .insert([{
-        memberid: currentMember.memberid,
-        classid: cls.classid,
-        joindate: new Date().toISOString().split('T')[0]
-      }]);
-
-    if (error) throw error;
-
-    showSuccess(`Added to waitlist for ${cls.classname}. You'll be notified if a spot becomes available.`);
-    await loadUserData();
-    await loadAvailableClasses();
-
-  } catch (error) {
-    console.error("Error joining waitlist:", error);
-    showError("Failed to join waitlist. Please try again.");
-  }
-}
-
-async function cancelBooking(bookingId) {
-  if (!confirm("Are you sure you want to cancel this booking?")) return;
-
-  try {
-    const booking = userBookings.find(b => b.bookingid === bookingId);
-    if (!booking) throw new Error("Booking not found");
-
-    // Delete booking
-    const { error: deleteError } = await supabase
-      .from('booking')
-      .delete()
-      .eq('bookingid', bookingId);
-
-    if (deleteError) throw deleteError;
-
-    // Update class booked count
-    const { data: cls, error: classError } = await supabase
-      .from('class')
-      .select('*')
-      .eq('classid', booking.classid)
-      .single();
-
-    if (!classError && cls) {
-      await supabase
-        .from('class')
-        .update({ booked: Math.max(0, (cls.booked || 0) - (booking.participants || 1)) })
-        .eq('classid', booking.classid);
-    }
-
-    showSuccess("Booking cancelled successfully.");
-    await loadUserData();
-    await loadAvailableClasses();
-
-  } catch (error) {
-    console.error("Error cancelling booking:", error);
-    showError("Failed to cancel booking. Please try again.");
-  }
-}
-
-async function cancelBookingByClass(classId) {
-  const booking = userBookings.find(b => b.classid === parseInt(classId));
-  if (booking) {
-    await cancelBooking(booking.bookingid);
-    document.getElementById("classDetailsModal").style.display = "none";
-  }
-}
-
-function renderCalendar() {
-  // Basic calendar implementation
-  const calendarGrid = document.getElementById("calendarGrid");
-  const monthYear = document.getElementById("calendarMonth");
-  
-  const year = currentCalendarDate.getFullYear();
-  const month = currentCalendarDate.getMonth();
-  
-  monthYear.textContent = currentCalendarDate.toLocaleDateString('en-US', { 
-    year: 'numeric', 
-    month: 'long' 
-  });
-  
-  // Simple calendar grid implementation
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const daysInMonth = lastDay.getDate();
-  
-  let calendarHTML = '<div class="calendar-header">';
-  const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  weekdays.forEach(day => {
-    calendarHTML += `<div class="calendar-weekday">${day}</div>`;
-  });
-  calendarHTML += '</div><div class="calendar-days">';
-  
-  // Add empty cells for days before the first day of the month
-  for (let i = 0; i < firstDay.getDay(); i++) {
-    calendarHTML += '<div class="calendar-day empty"></div>';
-  }
-  
-  // Add days of the month
-  for (let day = 1; day <= daysInMonth; day++) {
-    const dateStr = `${year}-${(month + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-    const dayClasses = allClasses.filter(cls => cls.scheduledate === dateStr);
-    
-    calendarHTML += `<div class="calendar-day" data-date="${dateStr}">`;
-    calendarHTML += `<div class="day-number">${day}</div>`;
-    if (dayClasses.length > 0) {
-      calendarHTML += `<div class="class-indicator">${dayClasses.length} class(es)</div>`;
-    }
-    calendarHTML += '</div>';
-  }
-  
-  calendarHTML += '</div>';
-  calendarGrid.innerHTML = calendarHTML;
-}
+    // Make functions available globally
+    window.openClassDetails = openClassDetails;
+    window.bookClass = bookClass;
+    window.cancelBooking = cancelBooking;
+    window.joinWaitlist = joinWaitlist;
+    window.loadAvailableClasses = loadAvailableClasses;
   </script>
 </body>
 </html>

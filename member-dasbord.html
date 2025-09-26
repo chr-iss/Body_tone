@@ -93,6 +93,17 @@
         font-weight: 600;
         margin-left: 15px;
       }
+       .booking-Btn {
+        background: var(--secondary);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-left: 15px;
+      }
+
 
 
       .container {
@@ -420,6 +431,9 @@
     <button class="checkin-Btn" id="CheckinBtn">
       <i class="fas fa-sign-in-alt"></i> Checkin
     </button>
+    <button class="booking-Btn" id="bookingBtn">
+      <i class="fas fa-order-alt"></i> bookings
+    </button>
   </div>
 
   <div class="detail-item">
@@ -728,6 +742,9 @@
   })  
     document.getElementById("CheckinBtn").addEventListener("click", () => {
     window.location.href = "booking.html";
+        });
+    document.getElementById("bookingBtn").addEventListener("click", () => {
+    window.location.href = "class.html";
         });
 
     </script>

@@ -678,7 +678,71 @@
             
             return isValid;
         }
-        
+        // Validate step 1 with stronger rules
+function validateStep1() {
+    let isValid = true;
+
+    // Reset errors
+    document.querySelectorAll('.error-text').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.form-control').forEach(el => el.classList.remove('error'));
+
+    // Validate first name
+    const fname = document.getElementById("fname").value.trim();
+    if (!/^[A-Za-z]{2,}$/.test(fname)) {
+        document.getElementById("fnameError").textContent = "First name must be at least 2 letters (no numbers)";
+        document.getElementById("fnameError").style.display = "block";
+        document.getElementById("fname").classList.add("error");
+        isValid = false;
+    }
+
+    // Validate last name
+    const lname = document.getElementById("lname").value.trim();
+    if (!/^[A-Za-z]{2,}$/.test(lname)) {
+        document.getElementById("lnameError").textContent = "Last name must be at least 2 letters (no numbers)";
+        document.getElementById("lnameError").style.display = "block";
+        document.getElementById("lname").classList.add("error");
+        isValid = false;
+    }
+
+        // Validate email format
+        const email = document.getElementById("email").value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+            document.getElementById("emailError").style.display = "block";
+            document.getElementById("email").classList.add("error");
+            isValid = false;
+        }
+
+        // Validate username
+        const uname = document.getElementById("uname").value.trim();
+        if (!/^[A-Za-z0-9_]{4,}$/.test(uname)) {
+            document.getElementById("unameError").textContent = "Username must be at least 4 characters (letters, numbers, underscore only)";
+            document.getElementById("unameError").style.display = "block";
+            document.getElementById("uname").classList.add("error");
+            isValid = false;
+        }
+
+        // Validate password strength
+        const password = document.getElementById("password").value;
+        const passRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&]).{6,}$/;
+        if (!passRegex.test(password)) {
+            document.getElementById("passwordError").textContent = "Password must be at least 6 chars, include upper, lower, number & symbol";
+            document.getElementById("passwordError").style.display = "block";
+            document.getElementById("password").classList.add("error");
+            isValid = false;
+        }
+
+        // Validate confirm password
+        const confirmPassword = document.getElementById("confirmPassword").value;
+        if (password !== confirmPassword) {
+            document.getElementById("confirmPasswordError").style.display = "block";
+            document.getElementById("confirmPassword").classList.add("error");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
         // Validate step 2
         function validateStep2() {
             const membershipType = document.getElementById("membershipType").value;
