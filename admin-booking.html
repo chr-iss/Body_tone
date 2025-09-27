@@ -438,25 +438,31 @@
     let isStaff = false;
     let userData = null;
 
-  // Check if staff/admin is logged in
+   // Check if staff is logged in
 document.addEventListener("DOMContentLoaded", async function () {
     try {
-        const user = JSON.parse(localStorage.getItem("user"));
+        userData = JSON.parse(localStorage.getItem("staff"));
 
-        if (!user || (user.role !== "staff" && user.role !== "admin")) {
-            // Not allowed → redirect
-            window.location.href = "index.html";
+        console.log("Retrieved staff data from localStorage:", userData);
+
+        if (!userData || !userData.staffid) {
+            showError("No valid staff session found. Please log in again.");
+            setTimeout(() => {
+                window.location.href = 'admin-login.html';
+            }, 2000);
             return;
         }
 
-        // Display user info
-        document.getElementById("userName").textContent =
-            user.fullname || user.email.split("@")[0];
+        // Always staff here
+        isStaff = true;
 
-        document.getElementById("userAvatar").textContent =
-            (user.fullname ? user.fullname.charAt(0) : user.email.charAt(0)).toUpperCase();
+        // Display staff info
+        userNameEl.textContent = userData.fullname 
+            || `${userData.fname || ""} ${userData.lname || ""}`;
 
-        // ✅ Load classes only for staff/admin
+        userAvatarEl.textContent = userNameEl.textContent.charAt(0).toUpperCase();
+
+        // Load classes
         await loadClasses();
 
     } catch (error) {
