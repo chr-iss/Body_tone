@@ -442,330 +442,234 @@
         </div>
     </div>
 
-    <script>
-        // Initialize Supabase
-        const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+   <!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 
-        const supabase = window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_ANON_KEY
-        );
+<script>
+const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
 
-        // Global variables
-        let currentMember = null;
-        let currentAttendance = null;
-        let attendanceHistory = [];
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Check if user is logged in
-        document.addEventListener("DOMContentLoaded", async function () {
-            try {
-                const memberData = JSON.parse(localStorage.getItem("member"));
-                console.log("Retrieved member data from localStorage:", memberData);
-                
-                if (!memberData || !memberData.memberid) {
-                    window.location.href = "member-login.html";
-                    return;
-                }
+let currentMember = null;
+let currentAttendance = null;
+let attendanceHistory = [];
 
-                currentMember = memberData;
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    // Use "user" key for login persistence
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user.id) {
+      window.location.href = "member-login.html";
+      return;
+    }
+    currentMember = user;
 
-                // Display user info
-                document.getElementById("userName").textContent = `${memberData.fname} ${memberData.lname}`;
-                document.getElementById("userAvatar").textContent = memberData.fname.charAt(0).toUpperCase();
+    // Display member info
+    const name = `${user.fname || ''} ${user.lname || ''}`.trim();
+    document.getElementById("userName").textContent = name;
+    document.getElementById("userAvatar").textContent = name ? name[0].toUpperCase() : 'M';
 
-                // Generate QR code for member
-                generateQRCode(`GYM_CHECKIN_${memberData.memberid}`);
+    // Generate QR code
+    generateQRCode(`GYM_CHECKIN_${user.id}`);
 
-                // Check current attendance status
-                await checkCurrentAttendance();
-                
-                // Load attendance history
-                await loadAttendanceHistory();
-                
-            } catch (error) {
-                console.error("Error initializing check-in page:", error);
-                showError("Failed to initialize check-in system. Please try again.");
-            }
-        });
+    // Check attendance and load history
+    await checkCurrentAttendance();
+    await loadAttendanceHistory();
 
-        // Check if member is currently checked in
-        async function checkCurrentAttendance() {
-            try {
-                // Find the most recent attendance record without a checkout time
-                const { data: attendance, error } = await supabase
-                    .from("attendance")
-                    .select("*")
-                    .eq("memberid", currentMember.memberid)
-                    .is("checkouttime", null)
-                    .order("checkintime", { ascending: false })
-                    .limit(1);
+  } catch (err) {
+    console.error("Init error:", err);
+    showError("Failed to initialize check-in system. Please try again.");
+  }
+});
 
-                if (error) throw error;
+// Check current attendance
+async function checkCurrentAttendance() {
+  try {
+    const { data: attendance, error } = await supabase
+      .from("attendance")
+      .select("*")
+      .eq("memberid", currentMember.id)
+      .is("checkouttime", null)
+      .order("checkintime", { ascending: false })
+      .limit(1);
 
-                if (attendance && attendance.length > 0) {
-                    // Member is currently checked in
-                    currentAttendance = attendance[0];
-                    updateUIForCheckedIn();
-                } else {
-                    // Member is not checked in
-                    currentAttendance = null;
-                    updateUIForCheckedOut();
-                }
-                
-            } catch (error) {
-                console.error("Error checking attendance status:", error);
-                // Default to checked out state if there's an error
-                currentAttendance = null;
-                updateUIForCheckedOut();
-            }
-        }
+    if (error) throw error;
 
-        // Update UI when member is checked in
-        function updateUIForCheckedIn() {
-            const checkinTime = new Date(currentAttendance.checkintime);
-            const formattedTime = checkinTime.toLocaleString();
-            
-            document.getElementById("statusIndicator").className = "status-indicator status-checked-in";
-            document.getElementById("statusIndicator").innerHTML = '<i class="fas fa-user-check"></i>';
-            document.getElementById("statusMessage").textContent = "You are checked in";
-            document.getElementById("statusTime").textContent = `Since ${formattedTime}`;
-            
-            document.getElementById("checkinBtn").style.display = "none";
-            document.getElementById("checkoutBtn").style.display = "inline-flex";
-            document.getElementById("disabledBtn").style.display = "none";
-        }
+    if (attendance && attendance.length > 0) {
+      currentAttendance = attendance[0];
+      updateUIForCheckedIn();
+    } else {
+      currentAttendance = null;
+      updateUIForCheckedOut();
+    }
+  } catch (err) {
+    console.error("Check attendance error:", err);
+    currentAttendance = null;
+    updateUIForCheckedOut();
+  }
+}
 
-        // Update UI when member is checked out
-        function updateUIForCheckedOut() {
-            document.getElementById("statusIndicator").className = "status-indicator status-checked-out";
-            document.getElementById("statusIndicator").innerHTML = '<i class="fas fa-user"></i>';
-            document.getElementById("statusMessage").textContent = "You are checked out";
-            document.getElementById("statusTime").textContent = "Ready for your next workout!";
-            
-            document.getElementById("checkinBtn").style.display = "inline-flex";
-            document.getElementById("checkoutBtn").style.display = "none";
-            document.getElementById("disabledBtn").style.display = "none";
-        }
+// UI updates
+function updateUIForCheckedIn() {
+  const checkinTime = new Date(currentAttendance.checkintime);
+  document.getElementById("statusIndicator").className = "status-indicator status-checked-in";
+  document.getElementById("statusIndicator").innerHTML = '<i class="fas fa-user-check"></i>';
+  document.getElementById("statusMessage").textContent = "You are checked in";
+  document.getElementById("statusTime").textContent = `Since ${checkinTime.toLocaleString()}`;
 
-        // Show loading state on buttons
-        function setLoading(buttonType) {
-            document.getElementById("checkinBtn").style.display = "none";
-            document.getElementById("checkoutBtn").style.display = "none";
-            document.getElementById("disabledBtn").style.display = "inline-flex";
-        }
+  document.getElementById("checkinBtn").style.display = "none";
+  document.getElementById("checkoutBtn").style.display = "inline-flex";
+  document.getElementById("disabledBtn").style.display = "none";
+}
 
-        // Check in function
-        async function checkIn() {
-            setLoading("checkin");
-            
-            try {
-                const { data, error } = await supabase
-                    .from("attendance")
-                    .insert([
-                        {
-                            memberid: currentMember.memberid,
-                            checkintime: new Date().toISOString(),
-                            isoffline: false,
-                            synced: true
-                        }
-                    ])
-                    .select();
+function updateUIForCheckedOut() {
+  document.getElementById("statusIndicator").className = "status-indicator status-checked-out";
+  document.getElementById("statusIndicator").innerHTML = '<i class="fas fa-user"></i>';
+  document.getElementById("statusMessage").textContent = "You are checked out";
+  document.getElementById("statusTime").textContent = "Ready for your next workout!";
 
-                if (error) throw error;
+  document.getElementById("checkinBtn").style.display = "inline-flex";
+  document.getElementById("checkoutBtn").style.display = "none";
+  document.getElementById("disabledBtn").style.display = "none";
+}
 
-                // Update current attendance
-                currentAttendance = data[0];
-                
-                // Update UI
-                updateUIForCheckedIn();
-                
-                // Reload attendance history
-                await loadAttendanceHistory();
-                
-                // Show success message
-                showSuccess("Successfully checked in! Enjoy your workout.");
-                
-            } catch (error) {
-                console.error("Error checking in:", error);
-                showError("Failed to check in. Please try again.");
-                updateUIForCheckedOut();
-            }
-        }
+// Check-in
+async function checkIn() {
+  setLoading();
+  try {
+    const { data, error } = await supabase.from("attendance").insert([{
+      memberid: currentMember.id,
+      checkintime: new Date().toISOString(),
+      isoffline: false,
+      synced: true
+    }]).select();
 
-        // Check out function
-        async function checkOut() {
-            setLoading("checkout");
-            
-            try {
-                const { data, error } = await supabase
-                    .from("attendance")
-                    .update({ checkouttime: new Date().toISOString() })
-                    .eq("attendanceid", currentAttendance.attendanceid)
-                    .select();
+    if (error) throw error;
+    currentAttendance = data[0];
+    updateUIForCheckedIn();
+    await loadAttendanceHistory();
+    showSuccess("Successfully checked in!");
+  } catch (err) {
+    console.error(err);
+    showError("Failed to check in.");
+    updateUIForCheckedOut();
+  }
+}
 
-                if (error) throw error;
+// Check-out
+async function checkOut() {
+  setLoading();
+  try {
+    const { data, error } = await supabase
+      .from("attendance")
+      .update({ checkouttime: new Date().toISOString() })
+      .eq("attendanceid", currentAttendance.attendanceid)
+      .select();
+    if (error) throw error;
 
-                // Update current attendance
-                currentAttendance = null;
-                
-                // Update UI
-                updateUIForCheckedOut();
-                
-                // Reload attendance history
-                await loadAttendanceHistory();
-                
-                // Show success message
-                showSuccess("Successfully checked out! See you next time.");
-                
-            } catch (error) {
-                console.error("Error checking out:", error);
-                showError("Failed to check out. Please try again.");
-                updateUIForCheckedIn();
-            }
-        }
+    currentAttendance = null;
+    updateUIForCheckedOut();
+    await loadAttendanceHistory();
+    showSuccess("Successfully checked out!");
+  } catch (err) {
+    console.error(err);
+    showError("Failed to check out.");
+    updateUIForCheckedIn();
+  }
+}
 
-        // Load attendance history
-        async function loadAttendanceHistory() {
-            try {
-                const { data: history, error } = await supabase
-                    .from("attendance")
-                    .select("*")
-                    .eq("memberid", currentMember.memberid)
-                    .order("checkintime", { ascending: false })
-                    .limit(10);
+// Load attendance history
+async function loadAttendanceHistory() {
+  try {
+    const { data: history, error } = await supabase
+      .from("attendance")
+      .select("*")
+      .eq("memberid", currentMember.id)
+      .order("checkintime", { ascending: false })
+      .limit(10);
+    if (error) throw error;
 
-                if (error) throw error;
+    attendanceHistory = history || [];
+    document.getElementById("historyLoading").style.display = "none";
+    document.getElementById("historyContainer").style.display = "block";
+    document.getElementById("noHistory").style.display = attendanceHistory.length === 0 ? "block" : "none";
 
-                attendanceHistory = history || [];
-                
-                // Hide loading indicator
-                document.getElementById("historyLoading").style.display = "none";
-                document.getElementById("historyContainer").style.display = "block";
-                
-                if (attendanceHistory.length > 0) {
-                    displayAttendanceHistory(attendanceHistory);
-                } else {
-                    document.getElementById("noHistory").style.display = "block";
-                }
-                
-            } catch (error) {
-                console.error("Error loading attendance history:", error);
-                document.getElementById("historyLoading").style.display = "none";
-                document.getElementById("historyContainer").style.display = "block";
-                document.getElementById("noHistory").style.display = "block";
-            }
-        }
+    if (attendanceHistory.length > 0) displayAttendanceHistory(attendanceHistory);
+  } catch (err) {
+    console.error(err);
+    document.getElementById("historyLoading").style.display = "none";
+    document.getElementById("historyContainer").style.display = "block";
+    document.getElementById("noHistory").style.display = "block";
+  }
+}
 
-        // Display attendance history in table
-        function displayAttendanceHistory(history) {
-            const tableBody = document.getElementById("historyTableBody");
-            tableBody.innerHTML = "";
-            
-            history.forEach(record => {
-                const row = document.createElement("tr");
-                
-                const checkinTime = new Date(record.checkintime);
-                const checkoutTime = record.checkouttime ? new Date(record.checkouttime) : null;
-                
-                const date = checkinTime.toLocaleDateString();
-                const checkin = checkinTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const checkout = checkoutTime ? checkoutTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-";
-                
-                // Calculate duration
-                let duration = "-";
-                if (checkoutTime) {
-                    const diffMs = checkoutTime - checkinTime;
-                    const diffMins = Math.floor(diffMs / 60000);
-                    const hours = Math.floor(diffMins / 60);
-                    const minutes = diffMins % 60;
-                    
-                    if (hours > 0) {
-                        duration = `${hours}h ${minutes}m`;
-                    } else {
-                        duration = `${minutes}m`;
-                    }
-                }
-                
-                // Determine status
-                const status = checkoutTime ? "Completed" : "In Progress";
-                const statusClass = checkoutTime ? "status-completed" : "status-inprogress";
-                
-                row.innerHTML = `
-                    <td>${date}</td>
-                    <td>${checkin}</td>
-                    <td>${checkout}</td>
-                    <td class="duration">${duration}</td>
-                    <td><span class="${statusClass}">${status}</span></td>
-                `;
-                
-                tableBody.appendChild(row);
-            });
-        }
+// Display attendance history
+function displayAttendanceHistory(history) {
+  const tbody = document.getElementById("historyTableBody");
+  tbody.innerHTML = "";
 
-     //// Generate QR code
-      function generateQRCode(qrData) {
-        const qrContainer = document.getElementById("qrcode");
-        qrContainer.innerHTML = ""; // clear previous QR
+  history.forEach(record => {
+    const checkin = new Date(record.checkintime);
+    const checkout = record.checkouttime ? new Date(record.checkouttime) : null;
 
-        // Create canvas
-        const canvas = document.createElement("canvas");
-        qrContainer.appendChild(canvas);
+    let duration = "-";
+    if (checkout) {
+      const mins = Math.floor((checkout - checkin)/60000);
+      duration = mins >= 60 ? `${Math.floor(mins/60)}h ${mins%60}m` : `${mins}m`;
+    }
 
-        QRCode.toCanvas(
-          canvas, // <- pass the canvas instead of the div
-          qrData,
-          {
-            width: 180,
-            margin: 1,
-            color: {
-              dark: "#2c3e50",
-              light: "#ffffff",
-            },
-          },
-          function (error) {
-            if (error) console.error("QR code generation error:", error);
-          }
-        );
-      }
-        
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${checkin.toLocaleDateString()}</td>
+      <td>${checkin.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td>
+      <td>${checkout ? checkout.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "-"}</td>
+      <td>${duration}</td>
+      <td><span class="${checkout ? "status-completed":"status-inprogress"}">${checkout ? "Completed":"In Progress"}</span></td>
+    `;
+    tbody.appendChild(row);
+  });
+}
 
-        // Show success message
-        function showSuccess(message) {
-            const successAlert = document.getElementById("successAlert");
-            successAlert.textContent = message;
-            successAlert.style.display = "block";
-            document.getElementById("errorAlert").style.display = "none";
-            
-            // Hide after 5 seconds
-            setTimeout(() => {
-                successAlert.style.display = "none";
-            }, 5000);
-        }
+// Generate QR code
+function generateQRCode(qrData) {
+  const qrContainer = document.getElementById("qrcode");
+  qrContainer.innerHTML = "";
+  const canvas = document.createElement("canvas");
+  qrContainer.appendChild(canvas);
 
-        // Show error message
-        function showError(message) {
-            const errorAlert = document.getElementById("errorAlert");
-            errorAlert.textContent = message;
-            errorAlert.style.display = "block";
-            document.getElementById("successAlert").style.display = "none";
-        }
+  QRCode.toCanvas(canvas, qrData, { width: 180, margin:1, color:{dark:"#2c3e50",light:"#fff"}}, err => {
+    if(err) console.error("QR generation error:",err);
+  });
+}
 
-        // Event listeners
-        document.getElementById("checkinBtn").addEventListener("click", checkIn);
-        document.getElementById("checkoutBtn").addEventListener("click", checkOut);
+// Loading state
+function setLoading() {
+  document.getElementById("checkinBtn").style.display = "none";
+  document.getElementById("checkoutBtn").style.display = "none";
+  document.getElementById("disabledBtn").style.display = "inline-flex";
+}
 
-        // Back to dashboard
-        document.getElementById("backBtn").addEventListener("click", function() {
-            window.location.href = "member-dasbord.html";
-        });
+// Messages
+function showSuccess(msg) {
+  const s = document.getElementById("successAlert");
+  s.textContent = msg; s.style.display="block";
+  document.getElementById("errorAlert").style.display="none";
+  setTimeout(()=>s.style.display="none",5000);
+}
+function showError(msg) {
+  const e = document.getElementById("errorAlert");
+  e.textContent = msg; e.style.display="block";
+  document.getElementById("successAlert").style.display="none";
+}
 
-        // Logout functionality
-        document.getElementById("logoutBtn").addEventListener("click", () => {
-            localStorage.removeItem("member");
-            localStorage.removeItem("isAuthenticated");
-            window.location.href = "member-login.html";
-        });
-    </script>
-</body>
-</html>
+// Event listeners
+document.getElementById("checkinBtn").addEventListener("click", checkIn);
+document.getElementById("checkoutBtn").addEventListener("click", checkOut);
+document.getElementById("backBtn").addEventListener("click", ()=>window.location.href="member-dasbord.html");
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
+  localStorage.removeItem("user");
+  window.location.href="member-login.html";
+});
+</script>

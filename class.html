@@ -109,393 +109,249 @@
     <i class="fas fa-calendar-plus"></i> New Booking
   </button>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    // Initialize Supabase client
-    const supabaseUrl = "https://bxufacemathzdfqzmlad.supabase.co";
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
-    
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-    
-    let memberId = null;
+ <!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
 
-    document.addEventListener("DOMContentLoaded", async function () {
-      try {
-        const memberData = JSON.parse(localStorage.getItem("member"));
-        console.log("Retrieved member data from localStorage:", memberData);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        if (!memberData || !memberData.memberid) {
-          alert("No valid member data found. Please log in again.");
-          window.location.href = "member-login.html";
-          return;
-        }
+let memberId = null;
 
-        // Display member info
-        const name = `${memberData.fname || ''} ${memberData.lname || ''}`.trim();
-        document.getElementById("userName").innerText = name || 'Member';
-        const initials = name ? name.split(" ").map(w => w[0]).join("").substring(0, 2).toUpperCase() : 'M';
-        document.getElementById("userAvatar").innerText = initials;
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user"));
 
-        memberId = memberData.memberid;
-
-        // Check if tables exist and load data
-        const tablesExist = await ensureTablesExist();
-        if (tablesExist) {
-          await loadAvailableClasses();
-          await loadUserBookings();
-        }
-
-      } catch (err) {
-        console.error("Error initializing booking page:", err);
-        alert("Failed to load booking page. Please log in again.");
-        window.location.href = "member-login.html";
-      }
-    });
-
-    // Event listeners
-    document.getElementById("backBtn").addEventListener("click", () => {
-      window.location.href = "member-dashboard.html";
-    });
-
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-      localStorage.removeItem("member");
+    if (!user || !user.id) {
+      alert("No valid user data found. Please log in.");
       window.location.href = "member-login.html";
+      return;
+    }
+
+    memberId = user.id;
+
+    // Display member info
+    const name = `${user.fname || ''} ${user.lname || ''}`.trim();
+    document.getElementById("userName").innerText = name || 'Member';
+    const initials = name ? name.split(" ").map(w => w[0]).join("").substring(0,2).toUpperCase() : 'M';
+    document.getElementById("userAvatar").innerText = initials;
+
+    // Load data
+    await loadAvailableClasses();
+    await loadUserBookings();
+
+  } catch (err) {
+    console.error("Booking page init error:", err);
+    alert("Error initializing booking page. Please log in again.");
+    window.location.href = "member-login.html";
+  }
+});
+
+// Logout
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem("user");
+  window.location.href = "member-login.html";
+});
+
+// Back button
+document.getElementById("backBtn").addEventListener("click", () => {
+  window.location.href = "member-dasbord.html";
+});
+
+// Alerts
+function showAlert(msg, type='success'){
+  const alertDiv = type === 'success' ? document.getElementById('successAlert') : document.getElementById('errorAlert');
+  const otherAlert = type === 'success' ? document.getElementById('errorAlert') : document.getElementById('successAlert');
+  otherAlert.style.display = 'none';
+  alertDiv.innerText = msg;
+  alertDiv.style.display = 'block';
+  setTimeout(()=> alertDiv.style.display='none', 5000);
+}
+
+// Load available classes
+async function loadAvailableClasses(){
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    let { data: classes, error } = await supabase
+      .from("class")
+      .select("*")
+      .gte("scheduledate", today)
+      .order("scheduledate", {ascending:true})
+      .order("starttime",{ascending:true});
+    
+    if(error) throw error;
+
+    const tbody = document.getElementById("classTableBody");
+    const noClassesMsg = document.getElementById("noClasses");
+    tbody.innerHTML = "";
+
+    if(!classes || classes.length === 0){
+      noClassesMsg.style.display='block';
+      noClassesMsg.innerText="No available classes at the moment.";
+      return;
+    }
+    noClassesMsg.style.display='none';
+
+    classes.forEach(cls=>{
+      const spotsLeft = (Number(cls.capacity) || 20) - (Number(cls.booked) || 0);
+      const statusClass = spotsLeft <=0 ? 'status-full':'status-available';
+      const statusText = spotsLeft<=0?'Full':'Available';
+
+      const tr = document.createElement("tr");
+      tr.innerHTML=`
+        <td>${cls.classname||'Unnamed Class'}</td>
+        <td>${cls.scheduledate||'Date not set'}</td>
+        <td>${cls.starttime||'TBA'} - ${cls.endtime||'TBA'}</td>
+        <td>${cls.duration||60} mins</td>
+        <td>${cls.booked||0}/${cls.capacity||20}</td>
+        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+        <td>
+          <button class="btn btn-details" onclick="openClassDetails(${cls.classid})"><i class="fas fa-info-circle"></i> Details</button>
+          ${spotsLeft>0?`<button class="btn btn-book" onclick="bookClass(${cls.classid})"><i class="fas fa-bookmark"></i> Book Now</button>`:''}
+        </td>
+      `;
+      tbody.appendChild(tr);
     });
 
-    document.getElementById("newBookingBtn").addEventListener("click", () => {
-      // Scroll to classes table
-      document.querySelector('h3').scrollIntoView({ behavior: 'smooth' });
+  } catch(err){
+    console.error("Error loading classes:",err);
+    showAlert("Failed to load classes.","error");
+  }
+}
+
+// Load user bookings
+async function loadUserBookings(){
+  try{
+    const { data: bookings, error } = await supabase
+      .from("booking")
+      .select(`*, class:classid (classname, scheduledate, starttime, endtime, instructor)`)
+      .eq("memberid", memberId)
+      .order("bookingdate",{ascending:false});
+    
+    if(error) throw error;
+
+    const bookingsList = document.getElementById("bookingsList");
+    bookingsList.innerHTML = "";
+
+    if(!bookings || bookings.length===0){
+      bookingsList.innerHTML="<p>You have no bookings.</p>";
+      return;
+    }
+
+    bookings.forEach(b=>{
+      const div = document.createElement("div");
+      div.className="class-card";
+      div.id=`booking-${b.bookingid}`;
+      const classDate = new Date(b.class.scheduledate + 'T' + b.class.starttime);
+      const isPast = classDate < new Date();
+      div.innerHTML=`
+        <strong>${b.class.classname}</strong><br>
+        Instructor: ${b.class.instructor||'TBA'}<br>
+        Date: ${b.class.scheduledate}<br>
+        Time: ${b.class.starttime} - ${b.class.endtime}<br>
+        Booking ID: ${b.bookingid}<br>
+        ${isPast?'<span class="status-badge status-full">Completed</span>':'<button class="btn btn-cancel" onclick="cancelBooking('+b.bookingid+','+b.classid+')">Cancel Booking</button>'}
+      `;
+      bookingsList.appendChild(div);
     });
 
-    // Alert function
-    function showAlert(message, type = 'success') {
-      const alertDiv = type === 'success' ? document.getElementById('successAlert') : document.getElementById('errorAlert');
-      const otherAlert = type === 'success' ? document.getElementById('errorAlert') : document.getElementById('successAlert');
-      otherAlert.style.display = 'none';
-      alertDiv.innerText = message;
-      alertDiv.style.display = 'block';
-      setTimeout(() => alertDiv.style.display = 'none', 5000);
+  }catch(err){
+    console.error("Error loading bookings:",err);
+    showAlert("Failed to load your bookings.","error");
+  }
+}
+
+// Book a class
+async function bookClass(classId){
+  if(!confirm("Book this class?")) return;
+
+  try{
+    const { data: cls } = await supabase.from("class").select("booked,capacity,classname").eq("classid",classId).single();
+    const spotsLeft = (Number(cls.capacity)||20) - (Number(cls.booked)||0);
+    if(spotsLeft<=0){ showAlert("Class is full.","error"); return; }
+
+    const { data: existing } = await supabase.from("booking").select("bookingid").eq("memberid",memberId).eq("classid",classId).single();
+    if(existing){ showAlert("Already booked this class!","error"); return; }
+
+    // FIXED: Changed memberid to memberId
+    await supabase.from("booking").insert({ memberid: memberId, classid:classId, bookingdate:new Date().toISOString().split('T')[0], status:"confirmed"});
+    await supabase.from("class").update({ booked: (Number(cls.booked)||0)+1 }).eq("classid",classId);
+
+    showAlert(`Successfully booked ${cls.classname}!`,"success");
+    await loadAvailableClasses();
+    await loadUserBookings();
+
+  }catch(err){
+    console.error("Error booking class:",err);
+    showAlert("Failed to book class.","error");
+  }
+}
+
+// Cancel booking
+async function cancelBooking(bookingId,classId){
+  if(!confirm("Cancel this booking?")) return;
+
+  try{
+    await supabase.from("booking").delete().eq("bookingid",bookingId).eq("memberid",memberId);
+
+    const { data: cls } = await supabase.from("class").select("booked").eq("classid",classId).single();
+    await supabase.from("class").update({ booked: Math.max(0,(Number(cls.booked)||0)-1) }).eq("classid",classId);
+
+    showAlert("Booking cancelled.","success");
+    document.getElementById(`booking-${bookingId}`)?.remove();
+    await loadAvailableClasses();
+
+  }catch(err){
+    console.error("Error cancelling booking:",err);
+    showAlert("Failed to cancel booking.","error");
+  }
+}
+
+// Class details modal
+async function openClassDetails(classId){
+  try{
+    const { data: cls } = await supabase.from("class").select("*").eq("classid",classId).single();
+    if(!cls) throw new Error("Class not found");
+
+    const spotsLeft = (Number(cls.capacity)||20) - (Number(cls.booked)||0);
+
+    document.getElementById("modalClassName").innerText = cls.classname||'Unnamed Class';
+    document.getElementById("modalInstructor").innerText = cls.instructor||'TBA';
+    document.getElementById("modalDate").innerText = cls.scheduledate||'Date not set';
+    document.getElementById("modalTime").innerText = `${cls.starttime||'TBA'} - ${cls.endtime||'TBA'}`;
+    document.getElementById("modalDuration").innerText = `${cls.duration||60} minutes`;
+    document.getElementById("modalSpots").innerText = `${spotsLeft} spots left (${cls.booked||0}/${cls.capacity||20})`;
+    document.getElementById("modalDescription").innerText = cls.description||'No description';
+
+    const modalActions = document.getElementById("modalActions");
+    modalActions.innerHTML='';
+    if(spotsLeft>0){
+      const btn = document.createElement('button');
+      btn.className='btn btn-book';
+      btn.innerHTML='<i class="fas fa-bookmark"></i> Book This Class';
+      btn.onclick = ()=>bookClass(classId);
+      modalActions.appendChild(btn);
     }
 
-    // Check if database tables exist
-    async function ensureTablesExist() {
-      try {
-        const { data: classes, error } = await supabase.from("class").select("*").limit(1);
-        if (error) {
-          console.log("Class table might not exist:", error);
-          showAlert('Class table not found. Contact admin.', 'error');
-          return false;
-        }
-        console.log("Class table exists, records:", classes ? classes.length : 0);
-        return true;
-      } catch (err) {
-        console.error("Error ensuring tables exist:", err);
-        showAlert('Error checking database tables.', 'error');
-        return false;
-      }
-    }
+    document.getElementById("classDetailsModal").style.display='flex';
 
-    // Load available classes
-    async function loadAvailableClasses() {
-      try {
-        const today = new Date().toISOString().split("T")[0];
-        let { data: classes, error } = await supabase
-          .from("class")
-          .select("*")
-          .gte("scheduledate", today)
-          .order("scheduledate", { ascending: true })
-          .order("starttime", { ascending: true });
+  }catch(err){
+    console.error("Error opening class details:",err);
+    showAlert("Failed to load class details.","error");
+  }
+}
 
-        if (error) {
-          console.error("Supabase error:", error);
-          document.getElementById("classesLoading").innerHTML = `<div style="color:red;"><i class="fas fa-exclamation-triangle"></i> Error loading classes.</div>`;
-          return;
-        }
+// Modal close
+document.querySelectorAll('.close').forEach(btn=>{
+  btn.addEventListener('click',()=>btn.closest('.modal').style.display='none');
+});
+window.addEventListener('click',e=>{
+  if(e.target.classList.contains('modal')) e.target.style.display='none';
+});
 
-        document.getElementById("classesLoading").style.display = "none";
-        const tbody = document.getElementById("classTableBody");
-        const noClassesMsg = document.getElementById("noClasses");
-        tbody.innerHTML = "";
-
-        if (!classes || classes.length === 0) {
-          noClassesMsg.style.display = "block";
-          noClassesMsg.innerHTML = "No available classes found. Please check back later or contact support.";
-          return;
-        }
-
-        noClassesMsg.style.display = "none";
-
-        classes.forEach(cls => {
-          const classname = cls.classname || 'Unnamed Class';
-          const scheduledate = cls.scheduledate || 'Date not set';
-          const starttime = cls.starttime || 'TBA';
-          const endtime = cls.endtime || 'TBA';
-          const duration = cls.duration || 60;
-          const booked = Number(cls.booked) || 0;
-          const capacity = Number(cls.capacity) || 20;
-
-          const spotsLeft = capacity - booked;
-          let statusClass = spotsLeft <= 0 ? "status-full" : "status-available";
-          let statusText = spotsLeft <= 0 ? "Full" : "Available";
-
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${classname}</td>
-            <td>${scheduledate}</td>
-            <td>${starttime} - ${endtime}</td>
-            <td>${duration} mins</td>
-            <td>${booked}/${capacity}</td>
-            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-            <td>
-              <button class="btn btn-details" onclick="openClassDetails(${cls.classid})">
-                <i class="fas fa-info-circle"></i> Details
-              </button>
-              ${spotsLeft > 0 ? `<button class="btn btn-book" onclick="bookClass(${cls.classid})"><i class="fas fa-bookmark"></i> Book Now</button>` : ''}
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-
-      } catch (err) {
-        console.error("Error loading classes:", err);
-        document.getElementById("classesLoading").innerHTML = `<div style="color:red;"><i class="fas fa-exclamation-triangle"></i> Error loading classes. <button onclick="loadAvailableClasses()" class="btn"><i class="fas fa-redo"></i> Retry</button></div>`;
-      }
-    }
-
-    // Load user bookings
-    async function loadUserBookings() {
-      try {
-        const { data: bookings, error } = await supabase
-          .from("booking")
-          .select(`*, class:classid (classname, scheduledate, starttime, endtime, instructor)`)
-          .eq("memberid", memberId)
-          .order("bookingdate", { ascending: false });
-
-        if (error) throw error;
-
-        document.getElementById("bookingsLoading").style.display = "none";
-        const bookingsList = document.getElementById("bookingsList");
-        bookingsList.innerHTML = "";
-
-        if (!bookings || bookings.length === 0) {
-          bookingsList.innerHTML = "<p>You have no bookings.</p>";
-          return;
-        }
-
-        bookings.forEach(b => {
-          const div = document.createElement("div");
-          div.className = "class-card";
-          div.id = `booking-${b.bookingid}`;
-          const classDate = new Date(b.class.scheduledate + 'T' + b.class.starttime);
-          const isPastClass = classDate < new Date();
-
-          div.innerHTML = `
-            <strong>${b.class.classname}</strong><br>
-            Instructor: ${b.class.instructor || 'TBA'}<br>
-            Date: ${b.class.scheduledate}<br>
-            Time: ${b.class.starttime} - ${b.class.endtime}<br>
-            Booking ID: ${b.bookingid}<br>
-            ${isPastClass ? '<span class="status-badge status-full">Completed</span>' : '<button class="btn btn-cancel" onclick="cancelBooking(' + b.bookingid + ', ' + b.classid + ')">Cancel Booking</button>'}
-          `;
-          bookingsList.appendChild(div);
-        });
-
-      } catch (err) {
-        console.error("Error loading bookings:", err);
-        document.getElementById("bookingsLoading").innerText = "Error loading bookings";
-      }
-    }
-
-    // Cancel booking function
-    async function cancelBooking(bookingId, classId) {
-      if (!confirm("Are you sure you want to cancel this booking?")) return;
-
-      try {
-        const cancelBtn = document.querySelector(`button[onclick="cancelBooking(${bookingId}, ${classId})"]`);
-        if (cancelBtn) { 
-          cancelBtn.disabled = true; 
-          cancelBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Canceling...'; 
-        }
-
-        // First, get the current booked count
-        const { data: classData, error: classError } = await supabase
-          .from("class")
-          .select("booked")
-          .eq("classid", classId)
-          .single();
-          
-        if (classError) throw classError;
-
-        // Delete the booking
-        const { error: deleteError } = await supabase
-          .from("booking")
-          .delete()
-          .eq("bookingid", bookingId)
-          .eq("memberid", memberId);
-          
-        if (deleteError) throw deleteError;
-
-        // Update the class booked count
-        const newBookedCount = Math.max(0, (Number(classData.booked) || 0) - 1);
-        const { error: updateError } = await supabase
-          .from("class")
-          .update({ booked: newBookedCount })
-          .eq("classid", classId);
-          
-        if (updateError) throw updateError;
-
-        showAlert('Booking cancelled successfully!', 'success');
-        document.getElementById(`booking-${bookingId}`)?.remove();
-        await loadAvailableClasses();
-
-      } catch (err) {
-        console.error("Error canceling booking:", err);
-        showAlert('Failed to cancel booking. Please try again.', 'error');
-        const cancelBtn = document.querySelector(`button[onclick="cancelBooking(${bookingId}, ${classId})"]`);
-        if (cancelBtn) { 
-          cancelBtn.disabled = false; 
-          cancelBtn.innerHTML = 'Cancel Booking'; 
-        }
-      }
-    }
-
-    // Open class details modal
-    async function openClassDetails(classId) {
-      try {
-        const { data: classData, error } = await supabase
-          .from("class")
-          .select("*")
-          .eq("classid", classId)
-          .single();
-          
-        if (error || !classData) throw error || new Error("Class not found");
-
-        const spotsLeft = (Number(classData.capacity) || 20) - (Number(classData.booked) || 0);
-
-        document.getElementById("modalClassName").innerText = classData.classname || 'Unnamed Class';
-        document.getElementById("modalInstructor").innerText = classData.instructor || 'TBA';
-        document.getElementById("modalDate").innerText = classData.scheduledate || 'Date not set';
-        document.getElementById("modalTime").innerText = `${classData.starttime || 'TBA'} - ${classData.endtime || 'TBA'}`;
-        document.getElementById("modalDuration").innerText = `${classData.duration || 60} minutes`;
-        document.getElementById("modalSpots").innerText = `${spotsLeft} spots available (${classData.booked || 0}/${classData.capacity || 20} booked)`;
-        document.getElementById("modalDescription").innerText = classData.description || 'No description available.';
-
-        const modalActions = document.getElementById("modalActions");
-        modalActions.innerHTML = '';
-        if (spotsLeft > 0) {
-          const bookBtn = document.createElement('button');
-          bookBtn.className = 'btn btn-book';
-          bookBtn.innerHTML = '<i class="fas fa-bookmark"></i> Book This Class';
-          bookBtn.onclick = () => bookClass(classId);
-          modalActions.appendChild(bookBtn);
-        } else {
-          const waitlistBtn = document.createElement('button');
-          waitlistBtn.className = 'btn btn-details';
-          waitlistBtn.innerHTML = '<i class="fas fa-clipboard-list"></i> Join Waitlist';
-          waitlistBtn.onclick = () => joinWaitlist(classId);
-          modalActions.appendChild(waitlistBtn);
-        }
-
-        document.getElementById("classDetailsModal").style.display = 'flex';
-      } catch (err) {
-        console.error("Error loading class details:", err);
-        showAlert('Error loading class details. Please try again.', 'error');
-      }
-    }
-
-    // Book a class
-    async function bookClass(classId) {
-      if (!confirm("Are you sure you want to book this class?")) return;
-
-      try {
-        const { data: classData, error: classError } = await supabase
-          .from("class")
-          .select("booked, capacity, classname")
-          .eq("classid", classId)
-          .single();
-          
-        if (classError) throw classError;
-
-        const spotsLeft = (Number(classData.capacity) || 20) - (Number(classData.booked) || 0);
-        if (spotsLeft <= 0) {
-          alert("Sorry, this class is now full!");
-          await loadAvailableClasses();
-          return;
-        }
-
-        // Check if user already booked this class
-        const { data: existingBooking, error: checkError } = await supabase
-          .from("booking")
-          .select("bookingid")
-          .eq("memberid", memberId)
-          .eq("classid", classId)
-          .single();
-          
-        if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "not found" error
-          throw checkError;
-        }
-        
-        if (existingBooking) {
-          showAlert('You have already booked this class!', 'error');
-          return;
-        }
-
-        // Create the booking
-        const { error: bookingError } = await supabase
-          .from("booking")
-          .insert({
-            memberid: memberId,
-            classid: classId,
-            bookingdate: new Date().toISOString().split("T")[0],
-            status: "confirmed"
-          });
-          
-        if (bookingError) throw bookingError;
-
-        // Update the class booked count
-        const { error: updateError } = await supabase
-          .from("class")
-          .update({ booked: (Number(classData.booked) || 0) + 1 })
-          .eq("classid", classId);
-          
-        if (updateError) throw updateError;
-
-        showAlert(`Successfully booked ${classData.classname}!`, 'success');
-        document.getElementById("classDetailsModal").style.display = 'none';
-        await loadAvailableClasses();
-        await loadUserBookings();
-
-      } catch (err) {
-        console.error("Error booking class:", err);
-        showAlert('Failed to book class. Please try again.', 'error');
-      }
-    }
-
-    // Join waitlist (placeholder)
-    async function joinWaitlist(classId) {
-      alert("Waitlist functionality coming soon!");
-    }
-
-    // Modal close functionality
-    document.querySelectorAll('.close').forEach(closeBtn => {
-      closeBtn.addEventListener('click', function() {
-        this.closest('.modal').style.display = 'none';
-      });
-    });
-
-    window.addEventListener('click', function(event) {
-      if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
-      }
-    });
-
-    // Make functions available globally
-    window.openClassDetails = openClassDetails;
-    window.bookClass = bookClass;
-    window.cancelBooking = cancelBooking;
-    window.joinWaitlist = joinWaitlist;
-    window.loadAvailableClasses = loadAvailableClasses;
-  </script>
-</body>
-</html>
+// Expose functions globally
+window.openClassDetails = openClassDetails;
+window.bookClass = bookClass;
+window.cancelBooking = cancelBooking;
+</script>

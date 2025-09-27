@@ -6,11 +6,9 @@
     <title>Body Tone Gym - Member Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
+      /* Your existing CSS styles remain the same */
       :root {
         --primary: #2c3e50;
         --secondary: #3498db;
@@ -35,11 +33,11 @@
         line-height: 1.6;
       }
               
-        .card-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
       .header {
         background: linear-gradient(135deg, #572f32, #14191f);
@@ -93,7 +91,7 @@
         font-weight: 600;
         margin-left: 15px;
       }
-       .booking-Btn {
+      .booking-Btn {
         background: var(--secondary);
         color: white;
         border: none;
@@ -103,8 +101,6 @@
         font-weight: 600;
         margin-left: 15px;
       }
-
-
 
       .container {
         max-width: 1200px;
@@ -220,33 +216,6 @@
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       }
 
-      .actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-        margin-top: 20px;
-      }
-
-      .btn:hover {
-        background: #2980b9;
-      }
-
-      .btn-success {
-        background: var(--success);
-      }
-
-      .btn-success:hover {
-        background: #27ae60;
-      }
-
-      .btn-warning {
-        background: var(--warning);
-      }
-
-      .btn-warning:hover {
-        background: #e67e22;
-      }
-
       .payment-table {
         width: 100%;
         border-collapse: collapse;
@@ -326,7 +295,6 @@
         cursor: pointer;
       }
 
-      /* Placeholder styling */
       .placeholder {
         background: #f0f0f0;
         border-radius: 4px;
@@ -375,99 +343,75 @@
     </div>
 
     <div class="container">
-      <div
-        id="errorDisplay"
-        class="error-container"
-        style="display: none; grid-column: 1 / -1"
-      >
+      <div id="errorDisplay" class="error-container" style="display: none; grid-column: 1 / -1">
         <i class="fas fa-exclamation-circle"></i>
         <h2>Authentication Error</h2>
-        <p>
-          We couldn't retrieve your member information. Please log in again.
-        </p>
+        <p>We couldn't retrieve your member information. Please log in again.</p>
         <button id="loginRedirectBtn">Go to Login Page</button>
       </div>
 
       <div class="card">
         <h2 class="card-title">Member Profile</h2>
-       
-   
         <div class="profile-section">
-          <div
-            class="profile-img placeholder placeholder-circle"
-            id="profileImg"
-          ></div>
+          <div class="profile-img placeholder placeholder-circle" id="profileImg"></div>
           <div class="profile-info">
             <h2 class="placeholder placeholder-text" id="memberName"></h2>
             <p class="placeholder placeholder-text short" id="memberEmail"></p>
           </div>
         </div>
-
         <div class="detail-item">
           <span class="detail-label">Member ID:</span>
           <span class="placeholder placeholder-text short" id="memberId"></span>
         </div>
-
         <div class="detail-item">
           <span class="detail-label">Username:</span>
-          <span
-            class="placeholder placeholder-text short"
-            id="memberUsername"
-          ></span>
+          <span class="placeholder placeholder-text short" id="memberUsername"></span>
         </div>
-
         <div class="detail-item">
           <span class="detail-label">Gender:</span>
-          <span
-            class="placeholder placeholder-text short"
-            id="memberGender"
-          ></span>
+          <span class="placeholder placeholder-text short" id="memberGender"></span>
         </div>
       </div>
 
       <div class="card">
-  <div class="card-header">
-    <h2 class="card-title">Membership & QR Code</h2>
-    <button class="checkin-Btn" id="CheckinBtn">
-      <i class="fas fa-sign-in-alt"></i> Checkin
-    </button>
-    <button class="booking-Btn" id="bookingBtn">
-      <i class="fas fa-order-alt"></i> bookings
-    </button>
-  </div>
+        <div class="card-header">
+          <h2 class="card-title">Membership & QR Code</h2>
+          <div>
+            <button class="checkin-Btn" id="CheckinBtn">
+              <i class="fas fa-sign-in-alt"></i> Checkin
+            </button>
+            <button class="booking-Btn" id="bookingBtn">
+              <i class="fas fa-calendar-alt"></i> Bookings
+            </button>
+          </div>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Membership Type:</span>
+          <span class="placeholder placeholder-text short" id="membershipType"></span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Status:</span>
+          <span class="placeholder placeholder-text short" id="membershipStatus"></span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Start Date:</span>
+          <span class="placeholder placeholder-text short" id="membershipStart"></span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">End Date:</span>
+          <span class="placeholder placeholder-text short" id="membershipEnd"></span>
+        </div>
+        <div class="qr-container">
+          <div id="qrcode" class="placeholder" style="width: 180px; height: 180px"></div>
+        </div>
+      </div>
 
-  <div class="detail-item">
-    <span class="detail-label">Membership Type:</span>
-    <span class="placeholder placeholder-text short" id="membershipType"></span>
-  </div>
-
-  <div class="detail-item">
-    <span class="detail-label">Status:</span>
-    <span class="placeholder placeholder-text short" id="membershipStatus"></span>
-  </div>
-
-  <div class="detail-item">
-    <span class="detail-label">Start Date:</span>
-    <span class="placeholder placeholder-text short" id="membershipStart"></span>
-  </div>
-
-  <div class="detail-item">
-    <span class="detail-label">End Date:</span>
-    <span class="placeholder placeholder-text short" id="membershipEnd"></span>
-  </div>
-
-  <div class="qr-container">
-    <div id="qrcode" class="placeholder" style="width: 180px; height: 180px"></div>
-  </div>
-</div>
       <div class="card" style="grid-column: 1 / -1">
         <h2 class="card-title">Payment History</h2>
-
         <div id="paymentsLoading" class="loading">
           <i class="fas fa-spinner fa-spin"></i>
           Loading payment history...
         </div>
-
         <div id="paymentsContainer" style="display: none">
           <table class="payment-table">
             <thead>
@@ -479,11 +423,8 @@
                 <th>Status</th>
               </tr>
             </thead>
-            <tbody id="paymentsTableBody">
-              <!-- Payment data will be inserted here -->
-            </tbody>
+            <tbody id="paymentsTableBody"></tbody>
           </table>
-
           <div id="noPayments" class="no-payments" style="display: none">
             No payment history found.
           </div>
@@ -492,261 +433,323 @@
     </div>
 
     <script>
-      // Initialize Supabase
+      /* -------- Supabase setup -------- */
       const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
-      const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      const supabase = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-      );
+      /* -------- Utility UI helpers -------- */
+      function showError(message) {
+        const el = document.getElementById("errorDisplay");
+        if (el) {
+          el.style.display = "block";
+          const p = el.querySelector("p");
+          if (p) {
+            p.textContent = message;
+          }
+        } else {
+          alert(message);
+        }
+        document.querySelectorAll(".card").forEach(c => {
+          c.style.display = "none";
+        });
+      }
 
-      // Check if user is logged in
-      document.addEventListener("DOMContentLoaded", async function () {
+      function removePlaceholder(elementId, content) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        el.textContent = content || "";
+        el.classList.remove("placeholder", "placeholder-text", "placeholder-circle", "short");
+      }
+
+      function formatDate(d) {
+        if (!d) return "N/A";
+        const dt = new Date(d);
+        if (isNaN(dt.getTime())) return "N/A";
+        return dt.toLocaleDateString(undefined, { 
+          year: "numeric", 
+          month: "short", 
+          day: "numeric" 
+        });
+      }
+
+      /* -------- Dashboard init -------- */
+      window.addEventListener("DOMContentLoaded", async () => {
         try {
-          const memberData = JSON.parse(localStorage.getItem("member"));
-          console.log("Retrieved member data from localStorage:", memberData);
+          console.log("Dashboard loading...");
+          
+          let user = null;
 
-          if (!memberData || !memberData.memberid) {
-            showError("No valid member data found. Please log in again.");
+          // Try to get user from localStorage
+          try { 
+            user = JSON.parse(localStorage.getItem("user")); 
+            console.log("Found user in localStorage:", user);
+          } catch(e) { 
+            console.log("No user found in localStorage");
+            user = null; 
+          }
+
+          // Fallback: check for old "member" key
+          if (!user) {
+            try {
+              const old = JSON.parse(localStorage.getItem("member"));
+              console.log("Found old member data:", old);
+              if (old && old.memberid) {
+                user = {
+                  id: old.memberid,
+                  role: "member",
+                  email: old.email || "",
+                  fname: old.fname || "",
+                  lname: old.lname || "",
+                  uname: old.uname || ""
+                };
+                localStorage.setItem("user", JSON.stringify(user));
+                localStorage.removeItem("member"); // Clean up old key
+                console.log("Migrated old member data to user:", user);
+              }
+            } catch (e) { 
+              console.log("No old member data found");
+            }
+          }
+
+          // Validate user
+          if (!user || !user.id) {
+            console.log("No valid user found, redirecting to login...");
+            window.location.href = "member-login.html";
             return;
           }
 
+          // Check if user has role (for backward compatibility)
+          if (!user.role) {
+            user.role = "member"; // Default to member role
+            localStorage.setItem("user", JSON.stringify(user));
+          }
+
+          console.log("Logged in user:", user);
+
           // Display user info
-          document.getElementById(
-            "userName"
-          ).textContent = `${memberData.fname} ${memberData.lname}`;
-          document.getElementById("userAvatar").textContent = memberData.fname
-            .charAt(0)
-            .toUpperCase();
+          const displayName = user.email
+            ? user.email.split("@")[0].replace(".", " ").replace(/\b\w/g, c => c.toUpperCase())
+            : `${user.fname} ${user.lname}`.trim();
+
+          const userNameElement = document.getElementById("userName");
+          const userEmailElement = document.getElementById("userEmail");
+          const userAvatarElement = document.getElementById("userAvatar");
+
+          if (userNameElement) userNameElement.textContent = displayName;
+          if (userEmailElement) userEmailElement.textContent = user.email || "";
+          if (userAvatarElement) {
+            userAvatarElement.textContent = (user.email || user.fname || "U").charAt(0).toUpperCase();
+          }
 
           // Load member details
-          await loadMemberDetails(memberData.memberid);
+          await loadMemberData(user.id);
+          await loadMembershipDetails(user.id);
+          await loadPaymentHistory(user.id);
 
-          // Load membership details
-          await loadMembershipDetails(memberData.memberid);
+          // Setup event listeners
+          setupEventListeners();
 
-          // Load payment history
-          await loadPaymentHistory(memberData.memberid);
-        } catch (error) {
-          console.error("Error initializing dashboard:", error);
+        } catch (err) {
+          console.error("Dashboard init error:", err);
           showError("Failed to initialize dashboard. Please log in again.");
         }
       });
 
-      // Show error message
-      function showError(message) {
-        document.getElementById("errorDisplay").style.display = "block";
-        document.querySelector("#errorDisplay p").textContent = message;
-
-        // Hide all content cards
-        document.querySelectorAll(".card").forEach((card) => {
-          card.style.display = "none";
-        });
-      }
-
-      // Remove placeholder classes and set actual content
-      function removePlaceholder(elementId, content) {
-        const element = document.getElementById(elementId);
-        if (element && content !== undefined && content !== null) {
-          element.textContent = content;
-          element.classList.remove(
-            "placeholder",
-            "placeholder-text",
-            "placeholder-circle",
-            "short"
-          );
-        }
-      }
-
-      // Load member details
-      async function loadMemberDetails(memberid) {
+      /* -------- Load single member row and update UI -------- */
+      async function loadMemberData(memberId) {
         try {
-          if (!memberid || isNaN(memberid)) {
-            throw new Error("Invalid member ID: " + memberid);
-          }
+          if (!memberId) throw new Error("Invalid member id");
 
+          console.log("Loading member data for ID:", memberId);
+          
           const { data: member, error } = await supabase
             .from("member")
             .select("*")
-            .eq("memberid", memberid)
+            .eq("memberid", memberId)
             .single();
 
-          if (error) throw error;
-
+          if (error) {
+            console.error("Supabase error:", error);
+            throw error;
+          }
+          
           if (!member) {
-            throw new Error("No member found with ID: " + memberid);
+            console.error("Member not found in database");
+            throw new Error("Member not found");
           }
 
-          // Update UI with member details
+          console.log("Member data loaded:", member);
+
           removePlaceholder("memberName", `${member.fname} ${member.lname}`);
           removePlaceholder("memberEmail", member.email);
           removePlaceholder("memberId", member.memberid);
           removePlaceholder("memberUsername", member.uname);
           removePlaceholder("memberGender", member.gender || "Not specified");
 
-          // Set profile image with initials
+          // Profile initials
           const profileImg = document.getElementById("profileImg");
-          profileImg.textContent = `${member.fname.charAt(
-            0
-          )}${member.lname.charAt(0)}`.toUpperCase();
-          profileImg.classList.remove("placeholder", "placeholder-circle");
-          profileImg.style.background = "#3498db";
-          profileImg.style.color = "white";
+          if (profileImg) {
+            profileImg.textContent = `${(member.fname || "").charAt(0)}${(member.lname || "").charAt(0)}`.toUpperCase();
+            profileImg.classList.remove("placeholder", "placeholder-circle");
+            profileImg.style.background = "#3498db";
+            profileImg.style.color = "#fff";
+          }
 
-          // Generate QR code
-          generateQRCode(
-            `member_${member.memberid}_${member.uname.toUpperCase()}`
-          );
-        } catch (error) {
-          console.error("Error loading member details:", error);
-          showError("Error loading member details: " + error.message);
+          // QR Code
+          if (typeof QRCode !== "undefined") {
+            generateQRCode(`member_${member.memberid}_${(member.uname || "").toUpperCase()}`);
+          }
+        } catch (err) {
+          console.error("Error loading member data:", err);
+          showError("Error loading member details: " + (err.message || err));
         }
       }
 
-      // Load membership details
-      async function loadMembershipDetails(memberid) {
+      /* -------- Load membership (latest) -------- */
+      async function loadMembershipDetails(memberId) {
         try {
           const { data: memberships, error } = await supabase
             .from("membership")
             .select("*")
-            .eq("memberid", memberid)
+            .eq("memberid", memberId)
             .order("startdate", { ascending: false })
             .limit(1);
 
           if (error) throw error;
 
+          const statusEl = document.getElementById("membershipStatus");
+
           if (memberships && memberships.length > 0) {
-            const membership = memberships[0];
+            const mem = memberships[0];
+            removePlaceholder("membershipType", mem.type);
+            removePlaceholder("membershipStart", formatDate(mem.startdate));
+            removePlaceholder("membershipEnd", formatDate(mem.enddate));
+            removePlaceholder("membershipStatus", mem.status);
 
-            removePlaceholder("membershipType", membership.type);
-            removePlaceholder(
-              "membershipStart",
-              formatDate(membership.startdate)
-            );
-            removePlaceholder("membershipEnd", formatDate(membership.enddate));
-
-            const statusElement = document.getElementById("membershipStatus");
-            removePlaceholder("membershipStatus", membership.status);
-
-            statusElement.classList.remove(
-              "status-active",
-              "status-inactive",
-              "status-pending"
-            );
-            if (membership.status === "active") {
-              statusElement.classList.add("status-active");
-            } else if (membership.status === "expired") {
-              statusElement.classList.add("status-inactive");
-            } else {
-              statusElement.classList.add("status-pending");
+            if (statusEl) {
+              statusEl.classList.remove("status-active", "status-inactive", "status-pending");
+              if (mem.status === "active") statusEl.classList.add("status-active");
+              else if (mem.status === "expired") statusEl.classList.add("status-inactive");
+              else statusEl.classList.add("status-pending");
             }
           } else {
             removePlaceholder("membershipType", "No membership");
             removePlaceholder("membershipStatus", "inactive");
             removePlaceholder("membershipStart", "N/A");
             removePlaceholder("membershipEnd", "N/A");
-
-            const statusElement = document.getElementById("membershipStatus");
-            statusElement.classList.add("status-inactive");
+            if (statusEl) {
+              statusEl.classList.add("status-inactive");
+            }
           }
-        } catch (error) {
-          console.error("Error loading membership details:", error);
+        } catch (err) {
+          console.error("Error loading membership:", err);
         }
       }
 
-      // Load payment history
+      /* -------- Load payment history -------- */
       async function loadPaymentHistory(memberId) {
         try {
           const { data: payments, error } = await supabase
             .from("payment")
             .select("*")
             .eq("memberid", memberId)
-            .order("paymentdate", { ascending: false }); // <-- use correct column name here
+            .order("paymentdate", { ascending: false });
 
           if (error) throw error;
 
-          document.getElementById("paymentsLoading").style.display = "none";
-          document.getElementById("paymentsContainer").style.display = "block";
+          const paymentsLoading = document.getElementById("paymentsLoading");
+          const paymentsContainer = document.getElementById("paymentsContainer");
+          const noPayments = document.getElementById("noPayments");
+
+          if (paymentsLoading) paymentsLoading.style.display = "none";
+          if (paymentsContainer) paymentsContainer.style.display = "block";
 
           if (payments && payments.length > 0) {
             const tableBody = document.getElementById("paymentsTableBody");
-            tableBody.innerHTML = "";
-
-            payments.forEach((payment) => {
-              const row = document.createElement("tr");
-
-              row.innerHTML = `
-                        <td>${formatDate(payment.date)}</td>
-                        <td>Membership Payment</td>
-                        <td>R${payment.amount.toFixed(2)}</td>
-                        <td>${payment.method || "N/A"}</td>
-                        <td class="payment-status-${payment.status.toLowerCase()}">${
-                payment.status
-              }</td>
-                    `;
-
-              tableBody.appendChild(row);
-            });
+            if (tableBody) {
+              tableBody.innerHTML = "";
+              payments.forEach(p => {
+                const amount = (typeof p.amount === "number") ? p.amount.toFixed(2) : p.amount || "0.00";
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                  <td>${formatDate(p.paymentdate)}</td>
+                  <td>${p.description || "Membership Payment"}</td>
+                  <td>R${amount}</td>
+                  <td>${p.method || "N/A"}</td>
+                  <td class="payment-status-${(p.status || "").toLowerCase()}">${p.status || "N/A"}</td>
+                `;
+                tableBody.appendChild(tr);
+              });
+            }
           } else {
-            document.getElementById("noPayments").style.display = "block";
+            if (noPayments) noPayments.style.display = "block";
           }
-        } catch (error) {
-          console.error("Error loading payment history:", error);
-          document.getElementById("paymentsLoading").style.display = "none";
-          document.getElementById("paymentsContainer").style.display = "block";
-          document.getElementById("noPayments").style.display = "block";
+        } catch (err) {
+          console.error("Error loading payments:", err);
+          const paymentsLoading = document.getElementById("paymentsLoading");
+          const paymentsContainer = document.getElementById("paymentsContainer");
+          const noPayments = document.getElementById("noPayments");
+
+          if (paymentsLoading) paymentsLoading.style.display = "none";
+          if (paymentsContainer) paymentsContainer.style.display = "block";
+          if (noPayments) noPayments.style.display = "block";
         }
       }
 
-      //// Generate QR code
+      /* -------- QR generation -------- */
       function generateQRCode(qrData) {
         const qrContainer = document.getElementById("qrcode");
-        qrContainer.innerHTML = ""; // clear previous QR
-
-        // Create canvas
+        if (!qrContainer) return;
+        qrContainer.innerHTML = "";
+        if (typeof QRCode === "undefined") {
+          console.warn("QRCode library missing.");
+          return;
+        }
         const canvas = document.createElement("canvas");
         qrContainer.appendChild(canvas);
-
-        QRCode.toCanvas(
-          canvas, // <- pass the canvas instead of the div
-          qrData,
-          {
-            width: 180,
-            margin: 1,
-            color: {
-              dark: "#2c3e50",
-              light: "#ffffff",
-            },
-          },
-          function (error) {
-            if (error) console.error("QR code generation error:", error);
-          }
-        );
-      }
-      // Format date
-      function formatDate(dateString) {
-        if (!dateString) return "N/A";
-
-        const options = { year: "numeric", month: "short", day: "numeric" };
-        return new Date(dateString).toLocaleDateString(undefined, options);
+        QRCode.toCanvas(canvas, qrData, { 
+          width: 180, 
+          margin: 1, 
+          color: { dark: "#2c3e50", light: "#fff" } 
+        }, (err) => {
+          if (err) console.error("QR error:", err);
+        });
       }
 
-      // Logout functionality
-      document.getElementById("logoutBtn").addEventListener("click", () => {
-        localStorage.removeItem("user");
-        window.location.href = "member-login.html";
-        
-    
-  })  
-    document.getElementById("CheckinBtn").addEventListener("click", () => {
-    window.location.href = "booking.html";
-        });
-    document.getElementById("bookingBtn").addEventListener("click", () => {
-    window.location.href = "class.html";
-        });
+      /* -------- Setup event listeners -------- */
+      function setupEventListeners() {
+        const logoutBtn = document.getElementById("logoutBtn");
+        const checkinBtn = document.getElementById("CheckinBtn");
+        const bookingBtn = document.getElementById("bookingBtn");
+        const loginRedirectBtn = document.getElementById("loginRedirectBtn");
 
+        if (logoutBtn) {
+          logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("user");
+            localStorage.removeItem("member");
+            window.location.href = "member-login.html";
+          });
+        }
+
+        if (checkinBtn) {
+          checkinBtn.addEventListener("click", () => {
+            window.location.href = "booking.html";
+          });
+        }
+
+        if (bookingBtn) {
+          bookingBtn.addEventListener("click", () => {
+            window.location.href = "class.html";
+          });
+        }
+
+        if (loginRedirectBtn) {
+          loginRedirectBtn.addEventListener("click", () => {
+            window.location.href = "member-login.html";
+          });
+        }
+      }
     </script>
   </body>
 </html>

@@ -151,13 +151,12 @@
     </div>
 
     
+<script>
+const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    <script>
-      const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
-      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-   function showError(msg){
+function showError(msg){
   document.getElementById("errorAlert").textContent = msg;
   document.getElementById("errorAlert").style.display = "block";
   document.getElementById("successAlert").style.display = "none";
@@ -181,30 +180,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const { data: members, error } = await supabase
-        .from("member")   // ✅ Make sure your table name is correct
+      const { data: member, error } = await supabase
+        .from("member")
         .select("*")
         .eq("uname", uname)
-        .eq("password", password)
-        .limit(1);
+        .eq("password", password) // Replace with hashed password check in production
+        .single(); // fetch single record
 
-      if (error) {
-        showError("Login failed: " + error.message);
-        return;
-      }
-      if (!members || members.length === 0) {
+      if (error || !member) {
         showError("Invalid username or password.");
         return;
       }
 
-      const member = members[0];
-
-      // Save memberId so dashboard & booking pages can use it
-      localStorage.setItem("memberId", member.memberid);
+      // ✅ Store full user object for dashboard
+      const user = {
+        id: member.memberid,   // must be 'id'
+        role: "member",
+        email: member.email,
+        fname: member.fname,
+        lname: member.lname,
+        uname: member.uname
+      };
+      localStorage.setItem("user", JSON.stringify(user));
 
       showSuccess("Login successful! Redirecting to dashboard...");
       setTimeout(() => {
-        window.location.href = "member-dasbord.html";  // ✅ redirect to dashboard
+        window.location.href = "member-dasbord.html";
       }, 1000);
 
     } catch (err) {
@@ -212,7 +213,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-
-    </script>
-  </body>
-</html>
+</script>
