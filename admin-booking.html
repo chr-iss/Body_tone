@@ -438,40 +438,33 @@
     let isStaff = false;
     let userData = null;
 
-    // Check if user is logged in
-    document.addEventListener("DOMContentLoaded", async function () {
-        try {
-            userData = JSON.parse(localStorage.getItem("staff")) 
-                    || JSON.parse(localStorage.getItem("member"));
+    // Check if staff/admin is logged in
+document.addEventListener("DOMContentLoaded", async function () {
+    try {
+        const user = JSON.parse(localStorage.getItem("user"));
 
-            console.log("Retrieved user data from localStorage:", userData);
-
-            if (!userData) {
-                showError("No valid session found. Please log in again.");
-                setTimeout(() => {
-                    window.location.href = 'admin-login.html';
-                }, 2000);
-                return;
-            }
-
-            // Detect if staff or member
-            isStaff = !!userData.staffid;
-
-            // Display user info
-            userNameEl.textContent = isStaff
-                ? (userData.fullname || `${userData.fname || ""} ${userData.lname || ""}`)
-                : `${userData.fname} ${userData.lname}`;
-
-            userAvatarEl.textContent = userNameEl.textContent.charAt(0).toUpperCase();
-
-            // Load classes
-            await loadClasses();
-
-        } catch (error) {
-            console.error("Error initializing dashboard:", error);
-            showError("Failed to initialize dashboard. Please log in again.");
+        if (!user || (user.role !== "staff" && user.role !== "admin")) {
+            // Not allowed → redirect
+            window.location.href = "index.html";
+            return;
         }
-    });
+
+        // Display user info
+        document.getElementById("userName").textContent =
+            user.fullname || user.email.split("@")[0];
+
+        document.getElementById("userAvatar").textContent =
+            (user.fullname ? user.fullname.charAt(0) : user.email.charAt(0)).toUpperCase();
+
+        // ✅ Load classes only for staff/admin
+        await loadClasses();
+
+    } catch (error) {
+        console.error("Error initializing staff dashboard:", error);
+        showError("Failed to initialize dashboard. Please log in again.");
+    }
+});
+
 
     // Load classes from Supabase
     async function loadClasses() {
