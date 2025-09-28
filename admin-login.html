@@ -288,101 +288,101 @@
         </div>
 
         
-    <script>
-      // Initialize Supabase
-      const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
-      const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+   <script>
+  // Initialize Supabase
+  const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
 
-      const supabase = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-      );
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      // Form submission handler
-      document
-        .getElementById("loginForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
+  // 🔹 Helper functions to show alerts (defined FIRST to avoid ReferenceError)
+  function showError(message) {
+    const errorAlert = document.getElementById("errorAlert");
+    if (errorAlert) {
+      errorAlert.textContent = message;
+      errorAlert.style.display = "block";
+    }
+    console.error("❌", message);
+  }
 
-          const email = document.getElementById("email").value;
-          const password = document.getElementById("password").value;
+  function showSuccess(message) {
+    const successAlert = document.getElementById("successAlert");
+    if (successAlert) {
+      successAlert.textContent = message;
+      successAlert.style.display = "block";
+    }
+    console.log("✅", message);
+  }
 
-          // Hide previous alerts
-          document.getElementById("errorAlert").style.display = "none";
-          document.getElementById("successAlert").style.display = "none";
+  // 🔹 Form submission handler
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-          try {
-            // Try to authenticate as staff
-            const { data: staffData, error: staffError } = await supabase
-              .from("staff")
-              .select("staffid, email, plainpassword, role")
-              .eq("email", email)
-              .eq("plainpassword", password)
-              .single();
-            console.log(staffData, staffError);
-            if (!staffError && staffData) {
-              // Successful staff login
-              showSuccess("Staff login successful!");
-              // Store user data in localStorage
-              localStorage.setItem(
-                "user",
-                JSON.stringify({
-                  id: staffData.staffid,
-                  email: staffData.email,
-                  role: staffData.role.toLowerCase(),
-                  status: "active",
-                })
-              );
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
 
-              // Redirect to appropriate dashboard based on role
-              setTimeout(() => {
-                if (staffData.role.toLowerCase() === "admin") {
-                  window.location.href = "admin-dashboard.html";
-                } else {
-                  window.location.href = "staff-dashboard.html";
-                }
-              }, 1500);
-              return;
-            }
+    // Hide previous alerts
+    document.getElementById("errorAlert").style.display = "none";
+    document.getElementById("successAlert").style.display = "none";
 
-            // If we get here, authentication failed
-            showError("Invalid email or password. Please try again.");
-          } catch (error) {
-            console.error("Login error:", error);
-            showError("An error occurred during login. Please try again.");
-          }
-        });
+    try {
+      // Try to authenticate as staff
+      const { data: staffData, error: staffError } = await supabase
+        .from("staff")
+        .select("staffid, email, plainpassword, role")
+        .eq("email", email)
+        .eq("plainpassword", password)
+        .single();
 
-      // Helper functions to show alerts
-      function showError(message) {
-        const errorAlert = document.getElementById("errorAlert");
-        errorAlert.textContent = message;
-        errorAlert.style.display = "block";
-      }
+      if (!staffError && staffData) {
+        // ✅ Successful staff login
+        showSuccess("Login successful!");
 
-      function showSuccess(message) {
-        const successAlert = document.getElementById("successAlert");
-        successAlert.textContent = message;
-        successAlert.style.display = "block";
-      }
+        // Store session in localStorage under ONE key ("user")
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            id: staffData.staffid,
+            email: staffData.email,
+            role: staffData.role.toLowerCase(),
+            status: "active",
+          })
+        );
 
-      // Check if user is already logged in
-      window.addEventListener("DOMContentLoaded", () => {
-        const user = localStorage.getItem("user");
-        if (user) {
-          const userData = JSON.parse(user);
-          if (userData.role === "admin") {
+        // Redirect to appropriate dashboard
+        setTimeout(() => {
+          if (staffData.role.toLowerCase() === "admin") {
             window.location.href = "admin-dashboard.html";
-          } else if (
-            userData.role === "staff" ||
-            userData.role === "trainer" ||
-            userData.role === "cashier"
-          ) {
+          } else {
             window.location.href = "staff-dashboard.html";
           }
-        }
-      });
-    </script>
-  </body>
-</html>
+        }, 1200);
+        return;
+      }
+
+      // ❌ Authentication failed
+      showError("Invalid email or password. Please try again.");
+    } catch (err) {
+      console.error("Login error:", err);
+      showError("An error occurred during login. Please try again.");
+    }
+  });
+
+  // 🔹 Check if user is already logged in
+  window.addEventListener("DOMContentLoaded", () => {
+    const user = localStorage.getItem("user");
+    if (user) {
+      const userData = JSON.parse(user);
+      if (userData.role === "admin") {
+        window.location.href = "admin-dashboard.html";
+      } else if (
+        userData.role === "staff" ||
+        userData.role === "trainer" ||
+        userData.role === "cashier"
+      ) {
+        window.location.href = "staff-dashboard.html";
+      }
+    }
+  });
+</script>

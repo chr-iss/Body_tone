@@ -78,6 +78,17 @@
         font-weight: 600;
         margin-left: 15px;
       }
+      .booking-btn {
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        margin-left: 15px;
+      }
+      
 
       .container {
         max-width: 1200px;
@@ -273,14 +284,18 @@
   </head>
   <body>
     <div class="header">
-      <h1>Body Tone Gym - Member Registration</h1>
+      <h1>Body Tone Gym</h1>
       <div class="user-info">
         <div class="user-avatar" id="userAvatar">S</div>
         <span id="userName">Staff User</span>
         <a class="logout-btn" href="admin-scanner.html">Scanner</a>
+        <button class="booking-btn" id="bookingBtn">
+          <i class="fas book-alt"></i> Bookings
+        </button>
         <button class="logout-btn" id="logoutBtn">
           <i class="fas fa-sign-out-alt"></i> Logout
         </button>
+        
       </div>
     </div>
 
@@ -478,7 +493,7 @@
         // Check if user is logged in
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user || (user.role !== "staff" && user.role !== "admin")) {
-          window.location.href = "index.html";
+          window.location.href = "admin-login.html";
           return;
         }
 
@@ -651,27 +666,26 @@
           }
         });
 
-      // Generate QR code
+      // -------- QR generation -------- */
       function generateQRCode(qrData) {
         const qrContainer = document.getElementById("qrcode");
+        if (!qrContainer) return;
         qrContainer.innerHTML = "";
-
-        QRCode.toCanvas(
-          qrContainer,
-          qrData,
-          {
-            width: 200,
-            margin: 1,
-            color: {
-              dark: "#2c3e50",
-              light: "#ffffff",
-            },
-          },
-          function (error) {
-            if (error) console.error("QR code generation error:", error);
-          }
-        );
+        if (typeof QRCode === "undefined") {
+          console.warn("QRCode library missing.");
+          return;
+        }
+        const canvas = document.createElement("canvas");
+        qrContainer.appendChild(canvas);
+        QRCode.toCanvas(canvas, qrData, { 
+          width: 180, 
+          margin: 1, 
+          color: { dark: "#2c3e50", light: "#fff" } 
+        }, (err) => {
+          if (err) console.error("QR error:", err);
+        });
       }
+
 
       // Print QR code
       document
@@ -735,6 +749,11 @@
       document.getElementById("logoutBtn").addEventListener("click", () => {
         localStorage.removeItem("user");
         window.location.href = "admin-login.html";
+      });
+      
+      document.getElementById("bookingBtn").addEventListener("click", () => {
+        localStorage.removeItem("user");
+        window.location.href = "admin-booking.html";
       });
     </script>
   </body>

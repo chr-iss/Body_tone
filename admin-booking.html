@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Booking Management</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Your existing CSS styles here */
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: white;
+            box-shadow: var(--box-shadow);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .avatar {
+            width: 50px;
+            height: 50px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .dashboard-title {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #d1146a;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #2bb4e0;
+        }
+        
+        .btn-secondary {
+            background-color: var(--gray);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        .btn-warning {
+            background-color: #ffc107;
+            color: var(--dark);
+        }
+        
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background-color: #e7f7ef;
+            color: #0ca678;
+        }
+        
+        .status-completed {
+            background-color: #e9ecef;
+            color: #6c757d;
+        }
+        
+        .error-message {
+            background-color: #ffe3e3;
+            color: #fa5252;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .success-message {
+            background-color: #e7f7ef;
+            color: #0ca678;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 600px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--gray);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #dee2e6;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-input {
+            padding: 10px;
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .status-filter {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            background: white;
+        }
+        
+        .loading-state {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .user-info {
+                justify-content: center;
+            }
+            
+            .header-actions {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>Staff Booking Management</h1>
+                <p>Manage class schedules and bookings</p>
+            </div>
+            <div class="user-info">
+                <div class="avatar" id="userAvatar">S</div>
+                <div>
+                    <h3 id="userName">Staff Member</h3>
+                    <p>Staff Dashboard</p>
+                </div>
+            </div>
+        </header>
+        
+        <div class="header-actions">
+            <button class="btn btn-secondary" id="backToDashboardBtn">
+                ← Back to Dashboard
+            </button>
+            <button class="btn btn-warning" id="logoutBtn">
+                Logout
+            </button>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Class Management</h2>
+                <button class="btn btn-primary" id="addClassBtn">Add New Class</button>
+            </div>
+            
+            <div id="classesList">
+                <p>Loading classes...</p>
+            </div>
+        </div>
+        
+        <div class="modal" id="addClassModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add New Class</h2>
+                    <button class="close-modal">&times;</button>
+                </div>
+                <form id="addClassForm">
+                    <div class="form-group">
+                        <label for="className">Class Name</label>
+                        <input type="text" id="className" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="scheduleDate">Schedule Date</label>
+                            <input type="date" id="scheduleDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="scheduleTime">Schedule Time</label>
+                            <input type="time" id="scheduleTime" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="startTime">Start Time</label>
+                            <input type="time" id="startTime" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="endTime">End Time</label>
+                            <input type="time" id="endTime" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="instructor">Instructor</label>
+                        <input type="text" id="instructor" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="capacity">Capacity</label>
+                        <input type="number" id="capacity" min="1" max="100" value="20">
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary">Add Class</button>
+                        <button type="button" class="btn btn-danger" id="cancelAddClass">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<<script>
+    // =========================
+    // 🔹 Helper Functions
+    // =========================
+    function showError(message) {
+        console.error("❌", message);
+        if (errorMessageEl) {
+            errorMessageEl.textContent = message;
+            errorMessageEl.style.display = "block";
+            errorMessageEl.style.background = "#e74c3c";
+            errorMessageEl.style.color = "white";
+            errorMessageEl.style.padding = "12px";
+            errorMessageEl.style.borderRadius = "5px";
+            setTimeout(() => {
+                errorMessageEl.style.display = "none";
+            }, 4000);
+        }
+    }
+
+    function showSuccess(message) {
+        console.log("✅", message);
+        if (successMessageEl) {
+            successMessageEl.textContent = message;
+            successMessageEl.style.display = "block";
+            successMessageEl.style.background = "#2ecc71";
+            successMessageEl.style.color = "white";
+            successMessageEl.style.padding = "12px";
+            successMessageEl.style.borderRadius = "5px";
+            setTimeout(() => {
+                successMessageEl.style.display = "none";
+            }, 4000);
+        }
+    }
+
+    // =========================
+    // 🔹 Initialize Supabase
+    // =========================
+    const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...."; // keep your full key
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // DOM Elements
+    const userNameEl = document.getElementById('userName');
+    const userAvatarEl = document.getElementById('userAvatar');
+    const errorMessageEl = document.getElementById('errorMessage');
+    const successMessageEl = document.getElementById('successMessage');
+    const classesListEl = document.getElementById('classesList');
+    const addClassBtn = document.getElementById('addClassBtn');
+    const addClassModal = document.getElementById('addClassModal');
+    const addClassForm = document.getElementById('addClassForm');
+    const cancelAddClassBtn = document.getElementById('cancelAddClass');
+    const closeModalBtn = document.querySelector('.close-modal');
+    const backToDashboardBtn = document.getElementById('backToDashboardBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    let userData = null;
+
+    // =========================
+    // 🔹 Authentication + Init
+    // =========================
+    document.addEventListener("DOMContentLoaded", async function () {
+        try {
+            console.log("🔄 Checking authentication...");
+
+            const userString = localStorage.getItem("user");
+            if (!userString) {
+                showError("No session found. Please log in again.");
+                setTimeout(() => window.location.href = 'admin-login.html', 2000);
+                return;
+            }
+
+            userData = JSON.parse(userString);
+
+            if (!userData || !userData.id || !userData.email || !userData.role) {
+                showError("Invalid session data. Please log in again.");
+                setTimeout(() => window.location.href = 'admin-login.html', 2000);
+                return;
+            }
+
+            console.log("✅ User authenticated:", userData);
+
+            // Display user info
+            displayUserInfo(userData);
+
+            // Add search functionality
+            addSearchFunctionality();
+
+            // Load classes
+            await loadClasses();
+
+            showSuccess("Booking management initialized!");
+        } catch (error) {
+            console.error("❌ Error initializing:", error);
+            showError("Failed to initialize. Please log in again.");
+            setTimeout(() => window.location.href = 'admin-login.html', 3000);
+        }
+    });
+
+    // ... keep your displayUserInfo, addSearchFunctionality, loadClasses, etc.
+</script>
