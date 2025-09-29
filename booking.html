@@ -441,8 +441,7 @@
             </div>
         </div>
     </div>
-
-   <!-- Supabase -->
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
 
@@ -471,8 +470,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("userName").textContent = name;
     document.getElementById("userAvatar").textContent = name ? name[0].toUpperCase() : 'M';
 
-    // Generate QR code
-    generateQRCode(`GYM_CHECKIN_${user.id}`);
+    // Get QR code data from database column
+    await generateQRCodeFromDatabase(user.id);
 
     // Check attendance and load history
     await checkCurrentAttendance();
@@ -483,6 +482,33 @@ document.addEventListener("DOMContentLoaded", async () => {
     showError("Failed to initialize check-in system. Please try again.");
   }
 });
+
+// Get QR code from database column
+async function generateQRCodeFromDatabase(memberId) {
+  try {
+    const { data: member, error } = await supabase
+      .from("member")
+      .select("qrcode")
+      .eq("memberid", memberId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching QR code:", error);
+      showError("Failed to load QR code data.");
+      return;
+    }
+
+    if (member && member.qrcode) {
+      // Use the QR code data from the database column
+      generateQRCode(member.qrcode);
+    } else {
+      showError("No QR code data found for this member.");
+    }
+  } catch (err) {
+    console.error("QR code fetch error:", err);
+    showError("Error loading QR code data.");
+  }
+}
 
 // Check current attendance
 async function checkCurrentAttendance() {
@@ -632,15 +658,40 @@ function displayAttendanceHistory(history) {
   });
 }
 
-// Generate QR code
+// Generate QR code - FIXED VERSION
 function generateQRCode(qrData) {
   const qrContainer = document.getElementById("qrcode");
+  if (!qrContainer) return;
+  
   qrContainer.innerHTML = "";
+  
+  // Create canvas element for QR code
   const canvas = document.createElement("canvas");
   qrContainer.appendChild(canvas);
-
-  QRCode.toCanvas(canvas, qrData, { width: 180, margin:1, color:{dark:"#2c3e50",light:"#fff"}}, err => {
-    if(err) console.error("QR generation error:",err);
+  
+  // Generate QR code with proper error handling
+  QRCode.toCanvas(canvas, qrData, { 
+    width: 200, 
+    margin: 2,
+    color: {
+      dark: "#2c3e50",
+      light: "#FFFFFF"
+    },
+    errorCorrectionLevel: 'M'
+  }, function(err) {
+    if (err) {
+      console.error("QR generation error:", err);
+      // Fallback: display text if QR generation fails
+      qrContainer.innerHTML = `
+        <div style="width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; 
+                   background: #f8f9fa; border: 1px dashed #ccc; border-radius: 5px; color: #666;">
+          <div style="text-align: center;">
+            <i class="fas fa-qrcode" style="font-size: 40px; margin-bottom: 10px;"></i>
+            <div>QR Code Error</div>
+          </div>
+        </div>
+      `;
+    }
   });
 }
 
