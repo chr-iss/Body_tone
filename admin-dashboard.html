@@ -465,299 +465,437 @@
       </div>
     </div>
 
-    <script>
-      // Initialize Supabase
-      const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
-      const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+   <script>
+  // Initialize Supabase
+  const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+  const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
 
-      const supabase = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-      );
+  const supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
 
-      // Set default dates
-      document.addEventListener("DOMContentLoaded", function () {
-        // Set default start date to today
-        const today = new Date();
-        const startDateInput = document.getElementById("startDate");
-        startDateInput.valueAsDate = today;
+  // Store current QR code data for printing
+  let currentQRCode = "";
 
-        // Set default end date to 30 days from today
-        const endDate = new Date();
-        endDate.setDate(today.getDate() + 30);
-        const endDateInput = document.getElementById("endDate");
-        endDateInput.valueAsDate = endDate;
+  // Set default dates
+  document.addEventListener("DOMContentLoaded", function () {
+    // Set default start date to today
+    const today = new Date();
+    const startDateInput = document.getElementById("startDate");
+    startDateInput.valueAsDate = today;
 
-        // Set payment date to today
-        const paymentDateInput = document.getElementById("paymentDate");
-        paymentDateInput.valueAsDate = today;
+    // Set default end date to 30 days from today
+    const endDate = new Date();
+    endDate.setDate(today.getDate() + 30);
+    const endDateInput = document.getElementById("endDate");
+    endDateInput.valueAsDate = endDate;
 
-        // Check if user is logged in
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (!user || (user.role !== "staff" && user.role !== "admin")) {
-          window.location.href = "index.html";
+    // Set payment date to today
+    const paymentDateInput = document.getElementById("paymentDate");
+    paymentDateInput.valueAsDate = today;
+
+    // Check if user is logged in
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || (user.role !== "staff" && user.role !== "admin")) {
+      window.location.href = "index.html";
+      return;
+    }
+
+    // Display user info
+    document.getElementById("userName").textContent =
+      user.email.split("@")[0];
+    document.getElementById("userAvatar").textContent = user.email
+      .charAt(0)
+      .toUpperCase();
+  });
+
+  // Tab navigation
+  document.querySelectorAll(".nav-tab").forEach((tab) => {
+    tab.addEventListener("click", function () {
+      // Remove active class from all tabs
+      document
+        .querySelectorAll(".nav-tab")
+        .forEach((t) => t.classList.remove("active"));
+      document
+        .querySelectorAll(".tab-content")
+        .forEach((c) => c.classList.remove("active"));
+
+      // Add active class to clicked tab
+      this.classList.add("active");
+      const tabId = this.getAttribute("data-tab") + "Tab";
+      document.getElementById(tabId).classList.add("active");
+    });
+  });
+
+  // Form submission handler
+  document
+    .getElementById("registrationForm")
+    .addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      // Hide previous alerts
+      document.getElementById("errorAlert").style.display = "none";
+      document.getElementById("successAlert").style.display = "none";
+
+      // Get form values
+      const fname = document.getElementById("fname").value;
+      const lname = document.getElementById("lname").value;
+      const email = document.getElementById("email").value;
+      const uname = document.getElementById("uname").value;
+      const gender = document.getElementById("gender").value;
+      const password = document.getElementById("password").value;
+      const membershipType =
+        document.getElementById("membershipType").value;
+      const startDate = document.getElementById("startDate").value;
+      const endDate = document.getElementById("endDate").value;
+      const paymentMethod = document.getElementById("paymentMethod").value;
+      const paymentStatus = document.getElementById("paymentStatus").value;
+      const paymentDate = document.getElementById("paymentDate").value;
+
+      // Validate required fields
+      if (
+        !fname ||
+        !lname ||
+        !email ||
+        !uname ||
+        !password ||
+        !membershipType ||
+        !startDate ||
+        !endDate
+      ) {
+        showError("Please fill all required fields.");
+        return;
+      }
+
+      try {
+        // Generate a unique QR code
+        const qrCode =
+          "QR_" +
+          uname.toUpperCase() +
+          "_" +
+          Math.floor(1000 + Math.random() * 9000);
+
+        // Store the QR code for printing
+        currentQRCode = qrCode;
+
+        // Insert into Member table
+        const { data: memberData, error: memberError } = await supabase
+          .from("member")
+          .insert([
+            {
+              fname: fname,
+              lname: lname,
+              email: email,
+              uname: uname,
+              gender: gender,
+              password: password,
+              qrcode: qrCode,
+              status: "Active",
+            },
+          ])
+          .select();
+
+        if (memberError) {
+          console.error("Error inserting member:", memberError);
+          showError("Error saving member data: " + memberError.message);
           return;
         }
 
-        // Display user info
-        document.getElementById("userName").textContent =
-          user.email.split("@")[0];
-        document.getElementById("userAvatar").textContent = user.email
-          .charAt(0)
-          .toUpperCase();
-      });
+        const memberId = memberData[0].memberid;
 
-      // Tab navigation
-      document.querySelectorAll(".nav-tab").forEach((tab) => {
-        tab.addEventListener("click", function () {
-          // Remove active class from all tabs
-          document
-            .querySelectorAll(".nav-tab")
-            .forEach((t) => t.classList.remove("active"));
-          document
-            .querySelectorAll(".tab-content")
-            .forEach((c) => c.classList.remove("active"));
+        // Insert into Membership table
+        const { error: membershipError } = await supabase
+          .from("membership")
+          .insert([
+            {
+              memberid: memberId,
+              type: membershipType,
+              status: paymentStatus === "Paid" ? "Paid" : "Unpaid",
+              startdate: startDate,
+              enddate: endDate,
+            },
+          ]);
 
-          // Add active class to clicked tab
-          this.classList.add("active");
-          const tabId = this.getAttribute("data-tab") + "Tab";
-          document.getElementById(tabId).classList.add("active");
-        });
-      });
+        if (membershipError) {
+          console.error("Error inserting membership:", membershipError);
+          showError(
+            "Error saving membership data: " + membershipError.message
+          );
+          return;
+        }
 
-      // Form submission handler
-      document
-        .getElementById("registrationForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
+        // Insert into Payment table if payment method is selected
+        if (paymentMethod && paymentDate) {
+          let amount = 300;
+          if (membershipType === "Student Monthly") amount = 250;
+          if (membershipType === "Day Pass") amount = 50;
 
-          // Hide previous alerts
-          document.getElementById("errorAlert").style.display = "none";
-          document.getElementById("successAlert").style.display = "none";
+          const { error: paymentError } = await supabase
+            .from("payment")
+            .insert([
+              {
+                memberid: memberId,
+                amount: amount,
+                paymentdate: paymentDate,
+                method: paymentMethod,
+                status: paymentStatus,
+                expirydate: endDate,
+              },
+            ]);
 
-          // Get form values
-          const fname = document.getElementById("fname").value;
-          const lname = document.getElementById("lname").value;
-          const email = document.getElementById("email").value;
-          const uname = document.getElementById("uname").value;
-          const gender = document.getElementById("gender").value;
-          const password = document.getElementById("password").value;
-          const membershipType =
-            document.getElementById("membershipType").value;
-          const startDate = document.getElementById("startDate").value;
-          const endDate = document.getElementById("endDate").value;
-          const paymentMethod = document.getElementById("paymentMethod").value;
-          const paymentStatus = document.getElementById("paymentStatus").value;
-          const paymentDate = document.getElementById("paymentDate").value;
-
-          // Validate required fields
-          if (
-            !fname ||
-            !lname ||
-            !email ||
-            !uname ||
-            !password ||
-            !membershipType ||
-            !startDate ||
-            !endDate
-          ) {
-            showError("Please fill all required fields.");
+          if (paymentError) {
+            console.error("Error inserting payment:", paymentError);
+            showError("Error saving payment data: " + paymentError.message);
             return;
           }
+        }
 
-          try {
-            // Generate a unique QR code
-            const qrCode =
-              "QR_" +
-              uname.toUpperCase() +
-              "_" +
-              Math.floor(1000 + Math.random() * 9000);
+        // Generate QR code
+        generateQRCode(qrCode);
 
-            // Insert into Member table
-            const { data: memberData, error: memberError } = await supabase
-              .from("member")
-              .insert([
-                {
-                  fname: fname,
-                  lname: lname,
-                  email: email,
-                  uname: uname,
-                  gender: gender,
-                  password: password,
-                  qrcode: qrCode,
-                  status: "Active",
-                },
-              ])
-              .select();
+        // Display member details
+        document.getElementById("detailName").textContent =
+          fname + " " + lname;
+        document.getElementById("detailEmail").textContent = email;
+        document.getElementById("detailMembership").textContent =
+          membershipType;
+        document.getElementById("detailStatus").textContent =
+          paymentStatus === "Paid" ? "Active" : "Pending Payment";
+        document.getElementById("detailEndDate").textContent = endDate;
 
-            if (memberError) {
-              console.error("Error inserting member:", memberError);
-              showError("Error saving member data: " + memberError.message);
-              return;
-            }
+        // Show success message
+        showSuccess("Member registered successfully! QR code generated.");
+      } catch (error) {
+        console.error("Registration error:", error);
+        showError(
+          "An error occurred during registration. Please try again."
+        );
+      }
+    });
 
-            const memberId = memberData[0].memberid;
-
-            // Insert into Membership table
-            const { error: membershipError } = await supabase
-              .from("membership")
-              .insert([
-                {
-                  memberid: memberId,
-                  type: membershipType,
-                  status: paymentStatus === "Paid" ? "Paid" : "Unpaid",
-                  startdate: startDate,
-                  enddate: endDate,
-                },
-              ]);
-
-            if (membershipError) {
-              console.error("Error inserting membership:", membershipError);
-              showError(
-                "Error saving membership data: " + membershipError.message
-              );
-              return;
-            }
-
-            // Insert into Payment table if payment method is selected
-            if (paymentMethod && paymentDate) {
-              let amount = 300;
-              if (membershipType === "Student Monthly") amount = 250;
-              if (membershipType === "Day Pass") amount = 50;
-
-              const { error: paymentError } = await supabase
-                .from("payment")
-                .insert([
-                  {
-                    memberid: memberId,
-                    amount: amount,
-                    paymentdate: paymentDate,
-                    method: paymentMethod,
-                    status: paymentStatus,
-                    expirydate: endDate,
-                  },
-                ]);
-
-              if (paymentError) {
-                console.error("Error inserting payment:", paymentError);
-                showError("Error saving payment data: " + paymentError.message);
-                return;
-              }
-            }
-
-            // Generate QR code
-            generateQRCode(qrCode);
-
-            // Display member details
-            document.getElementById("detailName").textContent =
-              fname + " " + lname;
-            document.getElementById("detailEmail").textContent = email;
-            document.getElementById("detailMembership").textContent =
-              membershipType;
-            document.getElementById("detailStatus").textContent =
-              paymentStatus === "Paid" ? "Active" : "Pending Payment";
-            document.getElementById("detailEndDate").textContent = endDate;
-
-            // Show success message
-            showSuccess("Member registered successfully! QR code generated.");
-          } catch (error) {
-            console.error("Registration error:", error);
-            showError(
-              "An error occurred during registration. Please try again."
-            );
-          }
-        });
-
-      //// Generate QR code
-function generateQRCode(qrData) {
+  // Generate QR code with better quality
+  function generateQRCode(qrData) {
     const qrContainer = document.getElementById("qrcode");
     qrContainer.innerHTML = ""; // clear previous QR
 
-    // Create canvas
+    // Create canvas with higher resolution for better printing
     const canvas = document.createElement("canvas");
+    canvas.id = "qrCanvas";
+    canvas.style.width = "200px";
+    canvas.style.height = "200px";
     qrContainer.appendChild(canvas);
 
+    // Generate QR code with higher quality settings
     QRCode.toCanvas(
-        canvas, // <- pass the canvas instead of the div
-        qrData,
-        {
-            width: 180,
-            margin: 1,
-            color: {
-                dark: "#2c3e50",
-                light: "#ffffff",
-            },
+      canvas,
+      qrData,
+      {
+        width: 300, // Higher resolution for better print quality
+        margin: 2,
+        color: {
+          dark: "#000000", // Pure black for better contrast
+          light: "#FFFFFF", // Pure white background
         },
-        function (error) {
-            if (error) console.error("QR code generation error:", error);
+        errorCorrectionLevel: 'H' // High error correction for better scanning
+      },
+      function (error) {
+        if (error) {
+          console.error("QR code generation error:", error);
+          // Fallback: create a simple text representation
+          qrContainer.innerHTML = `
+            <div style="text-align: center; padding: 20px; border: 2px dashed #ccc;">
+              <p><strong>QR Code Data:</strong></p>
+              <p style="font-family: monospace; font-size: 12px; word-break: break-all;">${qrData}</p>
+              <p style="color: #666; font-size: 12px; margin-top: 10px;">
+                Use this code for manual entry in the scanner
+              </p>
+            </div>
+          `;
+        } else {
+          console.log("QR code generated successfully:", qrData);
         }
+      }
     );
-}
+  }
 
-      // Print QR code
-      document
-        .getElementById("printBtn")
-        .addEventListener("click", function () {
-          const printContent = document.getElementById("qrcode").innerHTML;
-          const originalContent = document.body.innerHTML;
-
-          document.body.innerHTML = printContent;
-          window.print();
-          document.body.innerHTML = originalContent;
-          window.location.reload();
-        });
-
-      // New member button
-      document
-        .getElementById("newMemberBtn")
-        .addEventListener("click", function () {
-          document.getElementById("registrationForm").reset();
-
-          // Reset dates
-          const today = new Date();
-          const startDateInput = document.getElementById("startDate");
-          startDateInput.valueAsDate = today;
-
-          const endDate = new Date();
-          endDate.setDate(today.getDate() + 30);
-          const endDateInput = document.getElementById("endDate");
-          endDateInput.valueAsDate = endDate;
-
-          const paymentDateInput = document.getElementById("paymentDate");
-          paymentDateInput.valueAsDate = today;
-
-          // Clear QR code and details
-          document.getElementById("qrcode").innerHTML = "";
-          document.getElementById("detailName").textContent = "-";
-          document.getElementById("detailEmail").textContent = "-";
-          document.getElementById("detailMembership").textContent = "-";
-          document.getElementById("detailStatus").textContent = "-";
-          document.getElementById("detailEndDate").textContent = "-";
-
-          // Hide alerts
-          document.getElementById("errorAlert").style.display = "none";
-          document.getElementById("successAlert").style.display = "none";
-        });
-
-      // Helper functions to show alerts
-      function showError(message) {
-        const errorAlert = document.getElementById("errorAlert");
-        errorAlert.textContent = message;
-        errorAlert.style.display = "block";
+  // Print QR code with proper formatting
+  document
+    .getElementById("printBtn")
+    .addEventListener("click", function () {
+      if (!currentQRCode) {
+        alert("No QR code to print. Please register a member first.");
+        return;
       }
 
-      function showSuccess(message) {
-        const successAlert = document.getElementById("successAlert");
-        successAlert.textContent = message;
-        successAlert.style.display = "block";
-      }
+      // Create a print-friendly version
+      const printWindow = window.open('', '_blank');
+      const memberName = document.getElementById("detailName").textContent;
+      const membershipType = document.getElementById("detailMembership").textContent;
+      const endDate = document.getElementById("detailEndDate").textContent;
+      
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Body Tone Gym - Member QR Code</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 0; 
+              padding: 20px; 
+              text-align: center;
+              background: white;
+            }
+            .print-container { 
+              max-width: 400px; 
+              margin: 0 auto; 
+              padding: 20px;
+              border: 2px solid #333;
+              border-radius: 10px;
+            }
+            .gym-name { 
+              font-size: 24px; 
+              font-weight: bold; 
+              color: #2c3e50; 
+              margin-bottom: 10px;
+            }
+            .member-info { 
+              margin: 15px 0; 
+              text-align: left;
+              padding: 10px;
+              background: #f8f9fa;
+              border-radius: 5px;
+            }
+            .qr-code-container { 
+              margin: 20px 0; 
+              padding: 15px;
+              background: white;
+            }
+            .qr-code { 
+              max-width: 300px; 
+              height: auto; 
+              margin: 0 auto;
+              border: 1px solid #ddd;
+            }
+            .instructions { 
+              font-size: 12px; 
+              color: #666; 
+              margin-top: 15px;
+            }
+            .footer { 
+              margin-top: 20px; 
+              font-size: 10px; 
+              color: #999; 
+            }
+            @media print {
+              body { margin: 0; padding: 10px; }
+              .print-container { border: none; box-shadow: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-container">
+            <div class="gym-name">Body Tone Gym</div>
+            <div style="font-size: 18px; margin-bottom: 20px;">Member Access Card</div>
+            
+            <div class="member-info">
+              <div><strong>Name:</strong> ${memberName}</div>
+              <div><strong>Membership:</strong> ${membershipType}</div>
+              <div><strong>Valid Until:</strong> ${endDate}</div>
+              <div><strong>QR Code:</strong> ${currentQRCode}</div>
+            </div>
+            
+            <div class="qr-code-container">
+              <div style="font-weight: bold; margin-bottom: 10px;">SCAN FOR ENTRY</div>
+              <img src="${document.getElementById('qrCanvas').toDataURL('image/png')}" 
+                   alt="QR Code" 
+                   class="qr-code" />
+            </div>
+            
+            <div class="instructions">
+              <p>Present this QR code at the gym entrance for scanning</p>
+              <p>Keep this card safe and do not share with others</p>
+            </div>
+            
+            <div class="footer">
+              Generated on ${new Date().toLocaleDateString()} • Body Tone Gym Membership System
+            </div>
+          </div>
+          
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() {
+                window.close();
+              }, 500);
+            };
+          <\/script>
+        </body>
+        </html>
+      `);
+      
+      printWindow.document.close();
+    });
 
-      // Logout functionality
-      document.getElementById("logoutBtn").addEventListener("click", () => {
-        localStorage.removeItem("user");
-        window.location.href = "admin-login.html";
-      });
-    </script>
-  </body>
-</html>
+  // New member button
+  document
+    .getElementById("newMemberBtn")
+    .addEventListener("click", function () {
+      document.getElementById("registrationForm").reset();
+
+      // Reset dates
+      const today = new Date();
+      const startDateInput = document.getElementById("startDate");
+      startDateInput.valueAsDate = today;
+
+      const endDate = new Date();
+      endDate.setDate(today.getDate() + 30);
+      const endDateInput = document.getElementById("endDate");
+      endDateInput.valueAsDate = endDate;
+
+      const paymentDateInput = document.getElementById("paymentDate");
+      paymentDateInput.valueAsDate = today;
+
+      // Clear QR code and details
+      document.getElementById("qrcode").innerHTML = "";
+      document.getElementById("detailName").textContent = "-";
+      document.getElementById("detailEmail").textContent = "-";
+      document.getElementById("detailMembership").textContent = "-";
+      document.getElementById("detailStatus").textContent = "-";
+      document.getElementById("detailEndDate").textContent = "-";
+      
+      // Clear stored QR code
+      currentQRCode = "";
+
+      // Hide alerts
+      document.getElementById("errorAlert").style.display = "none";
+      document.getElementById("successAlert").style.display = "none";
+    });
+
+  // Helper functions to show alerts
+  function showError(message) {
+    const errorAlert = document.getElementById("errorAlert");
+    errorAlert.textContent = message;
+    errorAlert.style.display = "block";
+    
+    // Scroll to top to show error
+    window.scrollTo(0, 0);
+  }
+
+  function showSuccess(message) {
+    const successAlert = document.getElementById("successAlert");
+    successAlert.textContent = message;
+    successAlert.style.display = "block";
+    
+    // Scroll to top to show success
+    window.scrollTo(0, 0);
+  }
+
+  // Logout functionality
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("user");
+    window.location.href = "admin-login.html";
+  });
+</script>

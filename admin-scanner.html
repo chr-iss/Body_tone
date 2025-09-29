@@ -470,7 +470,7 @@
       document.addEventListener("DOMContentLoaded", function () {
         const user = JSON.parse(localStorage.getItem("user"));
         if (!user || (user.role !== "staff" && user.role !== "admin")) {
-          window.location.href = "staff-login.html";
+          window.location.href = "admin-login.html";
           return;
         }
 
