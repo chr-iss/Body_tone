@@ -432,286 +432,345 @@
       </div>
     </div>
 
-   <!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  <script>
+      /* -------- Supabase setup -------- */
+      const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-<script>
-const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
+      /* -------- Utility UI helpers -------- */
+      function showError(message) {
+        const el = document.getElementById("errorDisplay");
+        if (el) {
+          el.style.display = "block";
+          const p = el.querySelector("p");
+          if (p) {
+            p.textContent = message;
+          }
+        } else {
+          alert(message);
+        }
+        document.querySelectorAll(".card").forEach(c => {
+          c.style.display = "none";
+        });
+      }
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      function removePlaceholder(elementId, content) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        el.textContent = content || "";
+        el.classList.remove("placeholder", "placeholder-text", "placeholder-circle", "short");
+      }
 
-let currentMember = null;
-let currentAttendance = null;
-let attendanceHistory = [];
+      function formatDate(d) {
+        if (!d) return "N/A";
+        const dt = new Date(d);
+        if (isNaN(dt.getTime())) return "N/A";
+        return dt.toLocaleDateString(undefined, { 
+          year: "numeric", 
+          month: "short", 
+          day: "numeric" 
+        });
+      }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    // Use "user" key for login persistence
-    const user = JSON.parse(localStorage.getItem("user"));
-    if (!user || !user.id) {
-      window.location.href = "member-login.html";
-      return;
-    }
-    currentMember = user;
+      /* -------- Dashboard init -------- */
+      window.addEventListener("DOMContentLoaded", async () => {
+        try {
+          console.log("Dashboard loading...");
+          
+          let user = null;
 
-    // Display member info
-    const name = `${user.fname || ''} ${user.lname || ''}`.trim();
-    document.getElementById("userName").textContent = name;
-    document.getElementById("userAvatar").textContent = name ? name[0].toUpperCase() : 'M';
+          // Try to get user from localStorage
+          try { 
+            user = JSON.parse(localStorage.getItem("user")); 
+            console.log("Found user in localStorage:", user);
+          } catch(e) { 
+            console.log("No user found in localStorage");
+            user = null; 
+          }
 
-    // Get QR code data from database column
-    await generateQRCodeFromDatabase(user.id);
+          // Fallback: check for old "member" key
+          if (!user) {
+            try {
+              const old = JSON.parse(localStorage.getItem("member"));
+              console.log("Found old member data:", old);
+              if (old && old.memberid) {
+                user = {
+                  id: old.memberid,
+                  role: "member",
+                  email: old.email || "",
+                  fname: old.fname || "",
+                  lname: old.lname || "",
+                  uname: old.uname || ""
+                };
+                localStorage.setItem("user", JSON.stringify(user));
+                localStorage.removeItem("member"); // Clean up old key
+                console.log("Migrated old member data to user:", user);
+              }
+            } catch (e) { 
+              console.log("No old member data found");
+            }
+          }
 
-    // Check attendance and load history
-    await checkCurrentAttendance();
-    await loadAttendanceHistory();
+          // Validate user
+          if (!user || !user.id) {
+            console.log("No valid user found, redirecting to login...");
+            window.location.href = "member-login.html";
+            return;
+          }
 
-  } catch (err) {
-    console.error("Init error:", err);
-    showError("Failed to initialize check-in system. Please try again.");
-  }
-});
+          // Check if user has role (for backward compatibility)
+          if (!user.role) {
+            user.role = "member"; // Default to member role
+            localStorage.setItem("user", JSON.stringify(user));
+          }
 
-// Get QR code from database column
-async function generateQRCodeFromDatabase(memberId) {
-  try {
-    const { data: member, error } = await supabase
-      .from("member")
-      .select("qrcode")
-      .eq("memberid", memberId)
-      .single();
+          console.log("Logged in user:", user);
 
-    if (error) {
-      console.error("Error fetching QR code:", error);
-      showError("Failed to load QR code data.");
-      return;
-    }
+          // Display user info
+          const displayName = user.email
+            ? user.email.split("@")[0].replace(".", " ").replace(/\b\w/g, c => c.toUpperCase())
+            : `${user.fname} ${user.lname}`.trim();
 
-    if (member && member.qrcode) {
-      // Use the QR code data from the database column
-      generateQRCode(member.qrcode);
-    } else {
-      showError("No QR code data found for this member.");
-    }
-  } catch (err) {
-    console.error("QR code fetch error:", err);
-    showError("Error loading QR code data.");
-  }
-}
+          const userNameElement = document.getElementById("userName");
+          const userEmailElement = document.getElementById("userEmail");
+          const userAvatarElement = document.getElementById("userAvatar");
 
-// Check current attendance
-async function checkCurrentAttendance() {
-  try {
-    const { data: attendance, error } = await supabase
-      .from("attendance")
-      .select("*")
-      .eq("memberid", currentMember.id)
-      .is("checkouttime", null)
-      .order("checkintime", { ascending: false })
-      .limit(1);
+          if (userNameElement) userNameElement.textContent = displayName;
+          if (userEmailElement) userEmailElement.textContent = user.email || "";
+          if (userAvatarElement) {
+            userAvatarElement.textContent = (user.email || user.fname || "U").charAt(0).toUpperCase();
+          }
 
-    if (error) throw error;
+          // Load member details
+          await loadMemberData(user.id);
+          await loadMembershipDetails(user.id);
+          await loadPaymentHistory(user.id);
 
-    if (attendance && attendance.length > 0) {
-      currentAttendance = attendance[0];
-      updateUIForCheckedIn();
-    } else {
-      currentAttendance = null;
-      updateUIForCheckedOut();
-    }
-  } catch (err) {
-    console.error("Check attendance error:", err);
-    currentAttendance = null;
-    updateUIForCheckedOut();
-  }
-}
+          // Setup event listeners
+          setupEventListeners();
 
-// UI updates
-function updateUIForCheckedIn() {
-  const checkinTime = new Date(currentAttendance.checkintime);
-  document.getElementById("statusIndicator").className = "status-indicator status-checked-in";
-  document.getElementById("statusIndicator").innerHTML = '<i class="fas fa-user-check"></i>';
-  document.getElementById("statusMessage").textContent = "You are checked in";
-  document.getElementById("statusTime").textContent = `Since ${checkinTime.toLocaleString()}`;
+        } catch (err) {
+          console.error("Dashboard init error:", err);
+          showError("Failed to initialize dashboard. Please log in again.");
+        }
+      });
 
-  document.getElementById("checkinBtn").style.display = "none";
-  document.getElementById("checkoutBtn").style.display = "inline-flex";
-  document.getElementById("disabledBtn").style.display = "none";
-}
+      /* -------- Load single member row and update UI -------- */
+      async function loadMemberData(memberId) {
+        try {
+          if (!memberId) throw new Error("Invalid member id");
 
-function updateUIForCheckedOut() {
-  document.getElementById("statusIndicator").className = "status-indicator status-checked-out";
-  document.getElementById("statusIndicator").innerHTML = '<i class="fas fa-user"></i>';
-  document.getElementById("statusMessage").textContent = "You are checked out";
-  document.getElementById("statusTime").textContent = "Ready for your next workout!";
+          console.log("Loading member data for ID:", memberId);
+          
+          const { data: member, error } = await supabase
+            .from("member")
+            .select("*")
+            .eq("memberid", memberId)
+            .single();
 
-  document.getElementById("checkinBtn").style.display = "inline-flex";
-  document.getElementById("checkoutBtn").style.display = "none";
-  document.getElementById("disabledBtn").style.display = "none";
-}
+          if (error) {
+            console.error("Supabase error:", error);
+            throw error;
+          }
+          
+          if (!member) {
+            console.error("Member not found in database");
+            throw new Error("Member not found");
+          }
 
-// Check-in
-async function checkIn() {
-  setLoading();
-  try {
-    const { data, error } = await supabase.from("attendance").insert([{
-      memberid: currentMember.id,
-      checkintime: new Date().toISOString(),
-      isoffline: false,
-      synced: true
-    }]).select();
+          console.log("Member data loaded:", member);
 
-    if (error) throw error;
-    currentAttendance = data[0];
-    updateUIForCheckedIn();
-    await loadAttendanceHistory();
-    showSuccess("Successfully checked in!");
-  } catch (err) {
-    console.error(err);
-    showError("Failed to check in.");
-    updateUIForCheckedOut();
-  }
-}
+          removePlaceholder("memberName", `${member.fname} ${member.lname}`);
+          removePlaceholder("memberEmail", member.email);
+          removePlaceholder("memberId", member.memberid);
+          removePlaceholder("memberUsername", member.uname);
+          removePlaceholder("memberGender", member.gender || "Not specified");
 
-// Check-out
-async function checkOut() {
-  setLoading();
-  try {
-    const { data, error } = await supabase
-      .from("attendance")
-      .update({ checkouttime: new Date().toISOString() })
-      .eq("attendanceid", currentAttendance.attendanceid)
-      .select();
-    if (error) throw error;
+          // Profile initials
+          const profileImg = document.getElementById("profileImg");
+          if (profileImg) {
+            profileImg.textContent = `${(member.fname || "").charAt(0)}${(member.lname || "").charAt(0)}`.toUpperCase();
+            profileImg.classList.remove("placeholder", "placeholder-circle");
+            profileImg.style.background = "#3498db";
+            profileImg.style.color = "#fff";
+          }
 
-    currentAttendance = null;
-    updateUIForCheckedOut();
-    await loadAttendanceHistory();
-    showSuccess("Successfully checked out!");
-  } catch (err) {
-    console.error(err);
-    showError("Failed to check out.");
-    updateUIForCheckedIn();
-  }
-}
+          // QR Code - FIXED: Uses database qrcode column
+          if (typeof QRCode !== "undefined") {
+            generateQRCode();
+          }
+        } catch (err) {
+          console.error("Error loading member data:", err);
+          showError("Error loading member details: " + (err.message || err));
+        }
+      }
 
-// Load attendance history
-async function loadAttendanceHistory() {
-  try {
-    const { data: history, error } = await supabase
-      .from("attendance")
-      .select("*")
-      .eq("memberid", currentMember.id)
-      .order("checkintime", { ascending: false })
-      .limit(10);
-    if (error) throw error;
+      /* -------- Load membership (latest) -------- */
+      async function loadMembershipDetails(memberId) {
+        try {
+          const { data: memberships, error } = await supabase
+            .from("membership")
+            .select("*")
+            .eq("memberid", memberId)
+            .order("startdate", { ascending: false })
+            .limit(1);
 
-    attendanceHistory = history || [];
-    document.getElementById("historyLoading").style.display = "none";
-    document.getElementById("historyContainer").style.display = "block";
-    document.getElementById("noHistory").style.display = attendanceHistory.length === 0 ? "block" : "none";
+          if (error) throw error;
 
-    if (attendanceHistory.length > 0) displayAttendanceHistory(attendanceHistory);
-  } catch (err) {
-    console.error(err);
-    document.getElementById("historyLoading").style.display = "none";
-    document.getElementById("historyContainer").style.display = "block";
-    document.getElementById("noHistory").style.display = "block";
-  }
-}
+          const statusEl = document.getElementById("membershipStatus");
 
-// Display attendance history
-function displayAttendanceHistory(history) {
-  const tbody = document.getElementById("historyTableBody");
-  tbody.innerHTML = "";
+          if (memberships && memberships.length > 0) {
+            const mem = memberships[0];
+            removePlaceholder("membershipType", mem.type);
+            removePlaceholder("membershipStart", formatDate(mem.startdate));
+            removePlaceholder("membershipEnd", formatDate(mem.enddate));
+            removePlaceholder("membershipStatus", mem.status);
 
-  history.forEach(record => {
-    const checkin = new Date(record.checkintime);
-    const checkout = record.checkouttime ? new Date(record.checkouttime) : null;
+            if (statusEl) {
+              statusEl.classList.remove("status-active", "status-inactive", "status-pending");
+              if (mem.status === "active") statusEl.classList.add("status-active");
+              else if (mem.status === "expired") statusEl.classList.add("status-inactive");
+              else statusEl.classList.add("status-pending");
+            }
+          } else {
+            removePlaceholder("membershipType", "No membership");
+            removePlaceholder("membershipStatus", "inactive");
+            removePlaceholder("membershipStart", "N/A");
+            removePlaceholder("membershipEnd", "N/A");
+            if (statusEl) {
+              statusEl.classList.add("status-inactive");
+            }
+          }
+        } catch (err) {
+          console.error("Error loading membership:", err);
+        }
+      }
 
-    let duration = "-";
-    if (checkout) {
-      const mins = Math.floor((checkout - checkin)/60000);
-      duration = mins >= 60 ? `${Math.floor(mins/60)}h ${mins%60}m` : `${mins}m`;
-    }
+      /* -------- Load payment history -------- */
+      async function loadPaymentHistory(memberId) {
+        try {
+          const { data: payments, error } = await supabase
+            .from("payment")
+            .select("*")
+            .eq("memberid", memberId)
+            .order("paymentdate", { ascending: false });
 
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${checkin.toLocaleDateString()}</td>
-      <td>${checkin.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</td>
-      <td>${checkout ? checkout.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : "-"}</td>
-      <td>${duration}</td>
-      <td><span class="${checkout ? "status-completed":"status-inprogress"}">${checkout ? "Completed":"In Progress"}</span></td>
-    `;
-    tbody.appendChild(row);
-  });
-}
+          if (error) throw error;
 
-// Generate QR code - FIXED VERSION
-function generateQRCode(qrData) {
-  const qrContainer = document.getElementById("qrcode");
-  if (!qrContainer) return;
-  
-  qrContainer.innerHTML = "";
-  
-  // Create canvas element for QR code
-  const canvas = document.createElement("canvas");
-  qrContainer.appendChild(canvas);
-  
-  // Generate QR code with proper error handling
-  QRCode.toCanvas(canvas, qrData, { 
-    width: 200, 
-    margin: 2,
-    color: {
-      dark: "#2c3e50",
-      light: "#FFFFFF"
-    },
-    errorCorrectionLevel: 'M'
-  }, function(err) {
-    if (err) {
-      console.error("QR generation error:", err);
-      // Fallback: display text if QR generation fails
-      qrContainer.innerHTML = `
-        <div style="width: 200px; height: 200px; display: flex; align-items: center; justify-content: center; 
-                   background: #f8f9fa; border: 1px dashed #ccc; border-radius: 5px; color: #666;">
-          <div style="text-align: center;">
-            <i class="fas fa-qrcode" style="font-size: 40px; margin-bottom: 10px;"></i>
-            <div>QR Code Error</div>
-          </div>
-        </div>
-      `;
-    }
-  });
-}
+          const paymentsLoading = document.getElementById("paymentsLoading");
+          const paymentsContainer = document.getElementById("paymentsContainer");
+          const noPayments = document.getElementById("noPayments");
 
-// Loading state
-function setLoading() {
-  document.getElementById("checkinBtn").style.display = "none";
-  document.getElementById("checkoutBtn").style.display = "none";
-  document.getElementById("disabledBtn").style.display = "inline-flex";
-}
+          if (paymentsLoading) paymentsLoading.style.display = "none";
+          if (paymentsContainer) paymentsContainer.style.display = "block";
 
-// Messages
-function showSuccess(msg) {
-  const s = document.getElementById("successAlert");
-  s.textContent = msg; s.style.display="block";
-  document.getElementById("errorAlert").style.display="none";
-  setTimeout(()=>s.style.display="none",5000);
-}
-function showError(msg) {
-  const e = document.getElementById("errorAlert");
-  e.textContent = msg; e.style.display="block";
-  document.getElementById("successAlert").style.display="none";
-}
+          if (payments && payments.length > 0) {
+            const tableBody = document.getElementById("paymentsTableBody");
+            if (tableBody) {
+              tableBody.innerHTML = "";
+              payments.forEach(p => {
+                const amount = (typeof p.amount === "number") ? p.amount.toFixed(2) : p.amount || "0.00";
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                  <td>${formatDate(p.paymentdate)}</td>
+                  <td>${p.description || "Membership Payment"}</td>
+                  <td>R${amount}</td>
+                  <td>${p.method || "N/A"}</td>
+                  <td class="payment-status-${(p.status || "").toLowerCase()}">${p.status || "N/A"}</td>
+                `;
+                tableBody.appendChild(tr);
+              });
+            }
+          } else {
+            if (noPayments) noPayments.style.display = "block";
+          }
+        } catch (err) {
+          console.error("Error loading payments:", err);
+          const paymentsLoading = document.getElementById("paymentsLoading");
+          const paymentsContainer = document.getElementById("paymentsContainer");
+          const noPayments = document.getElementById("noPayments");
 
-// Event listeners
-document.getElementById("checkinBtn").addEventListener("click", checkIn);
-document.getElementById("checkoutBtn").addEventListener("click", checkOut);
-document.getElementById("backBtn").addEventListener("click", ()=>window.location.href="member-dashboard.html");
-document.getElementById("logoutBtn").addEventListener("click", ()=>{
-  localStorage.removeItem("user");
-  window.location.href="member-login.html";
-});
-</script>
+          if (paymentsLoading) paymentsLoading.style.display = "none";
+          if (paymentsContainer) paymentsContainer.style.display = "block";
+          if (noPayments) noPayments.style.display = "block";
+        }
+      }
+
+      /* -------- QR generation - FIXED -------- */
+      function generateQRCode() {
+        const qrContainer = document.getElementById("qrcode");
+        if (!qrContainer) return;
+        qrContainer.innerHTML = "";
+        if (typeof QRCode === "undefined") {
+          console.warn("QRCode library missing.");
+          return;
+        }
+        
+        // Get QR code data from member data
+        const memberData = JSON.parse(localStorage.getItem("user"));
+        if (!memberData || !memberData.id) return;
+        
+        // Fetch the QR code from database
+        supabase
+          .from("member")
+          .select("qrcode")
+          .eq("memberid", memberData.id)
+          .single()
+          .then(({ data, error }) => {
+            if (error) {
+              console.error("Error fetching QR code:", error);
+              return;
+            }
+            
+            if (data && data.qrcode) {
+              // Use the QR code data from the database column
+              const canvas = document.createElement("canvas");
+              qrContainer.appendChild(canvas);
+              QRCode.toCanvas(canvas, data.qrcode, { 
+                width: 180, 
+                margin: 1, 
+                color: { dark: "#2c3e50", light: "#fff" } 
+              }, (err) => {
+                if (err) console.error("QR error:", err);
+              });
+            } else {
+              console.warn("No QR code found in database");
+            }
+          });
+      }
+
+      /* -------- Setup event listeners -------- */
+      function setupEventListeners() {
+        const logoutBtn = document.getElementById("logoutBtn");
+        const checkinBtn = document.getElementById("CheckinBtn");
+        const bookingBtn = document.getElementById("bookingBtn");
+        const loginRedirectBtn = document.getElementById("loginRedirectBtn");
+
+        if (logoutBtn) {
+          logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("user");
+            localStorage.removeItem("member");
+            window.location.href = "member-login.html";
+          });
+        }
+
+        if (checkinBtn) {
+          checkinBtn.addEventListener("click", () => {
+            window.location.href = "booking.html";
+          });
+        }
+
+        if (bookingBtn) {
+          bookingBtn.addEventListener("click", () => {
+            window.location.href = "class.html";
+          });
+        }
+
+        if (loginRedirectBtn) {
+          loginRedirectBtn.addEventListener("click", () => {
+            window.location.href = "member-login.html";
+          });
+        }
+      }
+    </script>
