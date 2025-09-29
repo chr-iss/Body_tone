@@ -583,7 +583,7 @@
         </div>
     </div>
 
-    <script>
+   <script>
     const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -596,12 +596,6 @@
     
     // Current step tracking
     let currentStep = 1;
-    
-    // Generate QR code in format: QR_USERNAME_RANDOMNUMBER
-    function generateQRCodeData(username) {
-        const randomNumber = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
-        return `QR_${username.toUpperCase()}_${randomNumber}`;
-    }
     
     // Show error message
     function showError(message) {
@@ -897,8 +891,9 @@
                     const membershipType = document.getElementById("membershipType").value;
                     const paymentMethod = document.getElementById("paymentMethod").value;
                     
-                    // Generate QR code data
-                    const qrcode = generateQRCodeData(uname);
+                    // Generate QR code FIRST (before inserting member)
+                    const randomNumber = Math.floor(1000 + Math.random() * 9000);
+                    const qrcode = `QR_${uname.toUpperCase()}_${randomNumber}`;
                     
                     // Calculate dates and price
                     const startDate = new Date();
@@ -926,7 +921,7 @@
                                 uname: uname,
                                 gender: gender,
                                 password: password, // ⚠️ hash this in production
-                                qrcode: qrcode // ✅ QR code stored in database
+                                qrcode: qrcode // ✅ QR code included from start
                             }
                         ])
                         .select();
@@ -940,14 +935,14 @@
 
                     const memberid = memberData[0].memberid;
 
-                    // Insert into membership table
+                    // Insert into membership table with PAID status
                     const { error: membershipError } = await supabase
                         .from("membership")
                         .insert([
                             {
                                 memberid: memberid,
                                 type: membershipType,
-                                status: "active",
+                                status: "Paid", // ✅ CHANGED: Set status to "Paid" instead of "active"
                                 startdate: startDate.toISOString().split('T')[0],
                                 enddate: endDate.toISOString().split('T')[0]
                             }
@@ -960,7 +955,7 @@
                         return;
                     }
 
-                    // Insert into payment table
+                    // Insert into payment table with PAID status
                     const { error: paymentError } = await supabase
                         .from("payment")
                         .insert([
@@ -969,7 +964,7 @@
                                 amount: amount,
                                 paymentdate: new Date().toISOString().split('T')[0],
                                 method: paymentMethod,
-                                status: "paid"
+                                status: "paid" // ✅ Payment status is "paid"
                             }
                         ]);
 
@@ -980,13 +975,13 @@
                         return;
                     }
 
-                    // Success
-                    showSuccess("Registration successful! Your account has been created. QR Code: " + qrcode);
+                    // Success - Show QR code to user
+                    showSuccess(`Registration successful! Your QR Code: ${qrcode}. Save this for gym access.`);
                     
-                    // Redirect to login page after 3 seconds
+                    // Redirect to login page after 5 seconds (give user time to note QR code)
                     setTimeout(() => {
                         window.location.href = "member-login.html";
-                    }, 3000);
+                    }, 5000);
                     
                 } catch (error) {
                     console.error("Registration error:", error);
