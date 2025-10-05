@@ -91,6 +91,21 @@
       }
       .btn:hover { background: #2980b9; transform: translateY(-2px); }
 
+      .forgot-password { 
+        text-align: right; 
+        margin: 10px 0 20px 0; 
+      }
+      .forgot-password a { 
+        color: #3498db; 
+        text-decoration: none; 
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .forgot-password a:hover { 
+        text-decoration: underline; 
+        color: #2980b9;
+      }
+
       .signup-link { text-align: center; margin-top: 30px; color: #7f8c8d; }
       .signup-link a { color: #3498db; text-decoration: none; font-weight: 600; }
       .signup-link a:hover { text-decoration: underline; }
@@ -139,13 +154,19 @@
             <label for="password">Password</label>
             <input type="password" id="password" placeholder="Enter your password" required>
           </div>
+          
+          <!-- Forgot Password Link -->
+          <div class="forgot-password">
+            <a href="forgotpassword.html">Forgot your password?</a>
+          </div>
+          
           <button type="submit" class="btn">Login</button>
         </form>
 
         <div class="signup-link">
           Not a member yet? <a href="register.html">Sign up here</a>
           <br>
-            Are a staff Member <a href="admin-login.html">LogIn here</a>
+          Are a staff Member? <a href="admin-login.html">LogIn here</a>
         </div>
       </div>
     </div>
