@@ -8,6 +8,7 @@ Live Demo:https:https://chr-iss.github.io/Body_tone/
 
 ## 🚀 Features
 
+
 - **Digital Member Sign-Up**  
   Staff can register new members via a simple web form. Each member gets a unique QR code (downloadable/printable).
 
