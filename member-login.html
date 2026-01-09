@@ -176,18 +176,8 @@
 const SUPABASE_URL = "https://bxufacemathzdfqzmlad.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
 
-// More robust initialization
-let supabaseClient;
-try {
-    if (typeof supabase !== 'undefined') {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    } else {
-        console.error("Supabase library not loaded!");
-        // Handle error appropriately
-    }
-} catch (error) {
-    console.error("Failed to create Supabase client:", error);
-}
+// Just initialize the client - NO 'const' or 'let' here
+supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 function showError(msg){
   document.getElementById("errorAlert").textContent = msg;
@@ -213,22 +203,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      // ✅ CORRECTED: Use supabaseClient instead of supabase
-      const { data: member, error } = await supabaseClient
+      const { data: member, error } = await supabase
         .from("member")
         .select("*")
         .eq("uname", uname)
-        .eq("password", password) // Replace with hashed password check in production
-        .single(); // fetch single record
+        .eq("password", password)
+        .single();
 
       if (error || !member) {
         showError("Invalid username or password.");
         return;
       }
 
-      // ✅ Store full user object for dashboard
       const user = {
-        id: member.memberid,   // must be 'id'
+        id: member.memberid,
         role: "member",
         email: member.email,
         fname: member.fname,
@@ -247,4 +235,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
-</script> 
+</script>
