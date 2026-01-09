@@ -471,10 +471,7 @@
   const SUPABASE_ANON_KEY =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ4dWZhY2VtYXRoemRmcXptbGFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgzMTg0NTYsImV4cCI6MjA3Mzg5NDQ1Nn0.BFogsvLqjVH_TX-WsOcFYl0AopUkELwN0BhuJ2O0lwU";
 
-  const supabase = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
+  supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   // Store current QR code data for printing
   let currentQRCode = "";
